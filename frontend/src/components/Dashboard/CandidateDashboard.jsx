@@ -36,12 +36,10 @@ const CandidateDashboard = () => {
       setResumes(resumesRes.data);
       setApplications(appsRes.data);
       
-      // Calcular estatísticas
       const scores = appsRes.data.map(app => app.compatibility_score || 0);
       const avgScore = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
       const bestMatch = scores.length > 0 ? Math.max(...scores) : 0;
       
-      // Preparar histórico de scores
       const history = appsRes.data.map(app => ({
         date: new Date(app.applied_at).toLocaleDateString('pt-BR'),
         score: app.compatibility_score || 0,
@@ -57,7 +55,6 @@ const CandidateDashboard = () => {
         scoreEvolution: history
       });
       
-      // Recomendar vagas baseadas no currículo
       if (resumesRes.data.length > 0 && jobsRes.data.length > 0) {
         const recommendations = await recommendJobs(resumesRes.data[0], jobsRes.data);
         setRecommendedJobs(recommendations.slice(0, 3));
@@ -70,7 +67,6 @@ const CandidateDashboard = () => {
   };
 
   const recommendJobs = async (resume, allJobs) => {
-    // Simular recomendação baseada em habilidades
     try {
       const resumeSkills = resume.skills ? JSON.parse(resume.skills) : [];
       const scoredJobs = allJobs.map(job => {
@@ -211,12 +207,13 @@ const CandidateDashboard = () => {
                     
                     <div className="flex items-center gap-4 mb-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center shadow-md">
-                          <span className="text-white font-bold text-lg">{app.compatibility_score || 0}%</span>
+                        {/* Círculo maior para mostrar o percentual completo */}
+                        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center shadow-md">
+                          <span className="text-white font-bold text-base">{app.compatibility_score || 0}%</span>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600 font-medium">Score de Compatibilidade</p>
-                          <div className="w-32 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
+                          <div className="w-40 h-2 bg-gray-200 rounded-full mt-1 overflow-hidden">
                             <div 
                               className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-emerald-500 transition-all duration-500"
                               style={{ width: `${app.compatibility_score || 0}%` }}
