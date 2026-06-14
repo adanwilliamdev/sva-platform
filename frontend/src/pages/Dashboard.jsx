@@ -4,8 +4,8 @@ import { useAuth } from '../context/AuthContext';
 import { jobsAPI } from '../services/jobs';
 import { applicationsAPI } from '../services/applications';
 import { resumesAPI } from '../services/resumes';
-import { Briefcase, Users, TrendingUp, Award, Eye, PlusCircle, FileText, ClipboardList, Star, Clock, CheckCircle, XCircle, Building2, MapPin, DollarSign } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { Briefcase, Users, TrendingUp, Award, Eye, PlusCircle, FileText, ClipboardList, Star, Clock, CheckCircle, XCircle, Building2 } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const COLORS = ['#22C55E', '#3B82F6', '#F59E0B', '#EF4444'];
 
@@ -16,6 +16,7 @@ const RecruiterDashboard = ({ jobs, applications }) => {
   const acceptedApps = applications.filter(a => a.status === 'accepted').length;
   const approvalRate = totalApps > 0 ? ((acceptedApps / totalApps) * 100).toFixed(0) : 0;
 
+  // Agrupar vagas únicas
   const uniqueJobs = jobs.reduce((acc, job) => {
     if (!acc.find(j => j.id === job.id)) {
       acc.push(job);
@@ -48,6 +49,7 @@ const RecruiterDashboard = ({ jobs, applications }) => {
 
   return (
     <div>
+      {/* Stats Grid - sem botão no topo */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="stat-card"><div className="flex justify-between"><div><p className="text-slate-500 text-sm font-medium">Total de Vagas</p><p className="text-3xl font-bold text-slate-900 mt-1">{uniqueJobs.length}</p><p className="text-xs text-emerald-600 mt-2">{activeJobs} ativas</p></div><div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center"><Briefcase className="w-6 h-6 text-blue-600" /></div></div></div>
         <div className="stat-card"><div className="flex justify-between"><div><p className="text-slate-500 text-sm font-medium">Candidaturas</p><p className="text-3xl font-bold text-slate-900 mt-1">{totalApps}</p><p className="text-xs text-slate-500 mt-2">total recebidas</p></div><div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center"><Users className="w-6 h-6 text-emerald-600" /></div></div></div>
@@ -64,7 +66,7 @@ const RecruiterDashboard = ({ jobs, applications }) => {
               <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" vertical={false} />
               <XAxis dataKey="date" stroke="#94A3B8" fontSize={12} axisLine={false} tickLine={false} />
               <YAxis stroke="#94A3B8" fontSize={12} axisLine={false} tickLine={false} domain={[0, yAxisMax]} />
-              <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
+              <Tooltip contentStyle={{ backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0' }} />
               <Area type="monotone" dataKey="count" stroke="#2563EB" strokeWidth={2} fill="url(#colorCount)" />
             </AreaChart>
           </ResponsiveContainer>
@@ -107,11 +109,19 @@ const RecruiterDashboard = ({ jobs, applications }) => {
           {topCandidates.length === 0 && <p className="text-center text-slate-500 py-8 col-span-3">Nenhum candidato ainda</p>}
         </div>
       </div>
+
+      {/* Botão Nova Vaga - apenas no rodapé */}
+      <div className="text-center pt-4 border-t border-slate-200 mt-4">
+        <Link to="/post-job" className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-all duration-300 shadow-md hover:shadow-lg">
+          <PlusCircle className="w-5 h-5" />
+          + Nova Vaga
+        </Link>
+      </div>
     </div>
   );
 };
 
-// Dashboard do Candidato - Melhorado
+// Dashboard do Candidato (mantido igual)
 const CandidateDashboard = ({ resumes, applications }) => {
   const avgScore = applications.length > 0 ? (applications.reduce((a,b) => a + (b.compatibility_score || 0), 0) / applications.length).toFixed(0) : 0;
   const bestScore = applications.length > 0 ? Math.max(...applications.map(a => a.compatibility_score || 0)) : 0;
@@ -136,7 +146,6 @@ const CandidateDashboard = ({ resumes, applications }) => {
 
   return (
     <div>
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <div className="stat-card"><div className="flex justify-between"><div><p className="text-slate-500 text-sm font-medium">Meus Currículos</p><p className="text-3xl font-bold text-slate-900 mt-1">{resumes.length}</p><Link to="/resume" className="text-xs text-blue-600 mt-2 inline-block hover:underline">Gerenciar →</Link></div><div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center"><FileText className="w-6 h-6 text-blue-600" /></div></div></div>
         <div className="stat-card"><div className="flex justify-between"><div><p className="text-slate-500 text-sm font-medium">Candidaturas</p><p className="text-3xl font-bold text-slate-900 mt-1">{applications.length}</p><Link to="/applications" className="text-xs text-blue-600 mt-2 inline-block hover:underline">Ver todas →</Link></div><div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center"><ClipboardList className="w-6 h-6 text-emerald-600" /></div></div></div>
@@ -144,49 +153,25 @@ const CandidateDashboard = ({ resumes, applications }) => {
         <div className="stat-card"><div className="flex justify-between"><div><p className="text-slate-500 text-sm font-medium">Melhor Score</p><p className="text-3xl font-bold text-slate-900 mt-1">{bestScore}%</p><Link to="/applications" className="text-xs text-blue-600 mt-2 inline-block hover:underline">Ver detalhes →</Link></div><div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center"><Star className="w-6 h-6 text-orange-600" /></div></div></div>
       </div>
 
-      {/* Últimas Candidaturas - com título da vaga e empresa */}
       {applications.length > 0 && (
         <div className="card p-6">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-lg font-semibold text-slate-900">📋 Últimas Candidaturas</h3>
-            <Link to="/applications" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">
-              Ver todas
-              <Eye className="w-4 h-4" />
-            </Link>
+            <Link to="/applications" className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1">Ver todas <Eye className="w-4 h-4" /></Link>
           </div>
           <div className="space-y-4">
             {applications.slice(0, 5).map(app => (
               <div key={app.id} className="flex flex-col md:flex-row justify-between items-start md:items-center p-4 bg-slate-50 rounded-xl gap-3">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-slate-900">{app.job_title || `Vaga #${app.job_id}`}</p>
-                    {app.job_company && (
-                      <div className="flex items-center gap-1">
-                        <Building2 className="w-3 h-3 text-slate-400" />
-                        <p className="text-xs text-slate-500">{app.job_company}</p>
-                      </div>
-                    )}
-                  </div>
-                  {app.job_location && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <MapPin className="w-3 h-3 text-slate-400" />
-                      <p className="text-xs text-slate-400">{app.job_location}</p>
-                    </div>
-                  )}
+                  <p className="font-semibold text-slate-900">{app.job_title || `Vaga #${app.job_id}`}</p>
+                  {app.job_company && <div className="flex items-center gap-1 mt-1"><Building2 className="w-3 h-3 text-slate-400" /><p className="text-xs text-slate-500">{app.job_company}</p></div>}
                   <p className="text-xs text-slate-400 mt-1">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</p>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-sm transition-all duration-300 ${getScoreOpacity(app.status)} ${
-                    app.compatibility_score >= 80 ? 'bg-green-600' : 
-                    app.compatibility_score >= 60 ? 'bg-blue-600' : 
-                    app.compatibility_score >= 40 ? 'bg-yellow-600' : 
-                    'bg-red-600'
-                  }`}>
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold shadow-sm transition-all duration-300 ${getScoreOpacity(app.status)} ${app.compatibility_score >= 80 ? 'bg-green-600' : app.compatibility_score >= 60 ? 'bg-blue-600' : app.compatibility_score >= 40 ? 'bg-yellow-600' : 'bg-red-600'}`}>
                     {app.compatibility_score || 0}%
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>
-                    {getStatusText(app.status)}
-                  </span>
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(app.status)}`}>{getStatusText(app.status)}</span>
                 </div>
               </div>
             ))}
@@ -202,15 +187,12 @@ const CandidateDashboard = ({ resumes, applications }) => {
         </div>
       )}
 
-      {/* Botões de ação - versão melhorada */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
         <Link to="/jobs" className="px-6 py-2.5 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2">
-          <Briefcase className="w-4 h-4" />
-          Buscar Vagas
+          <Briefcase className="w-4 h-4" /> Buscar Vagas
         </Link>
         <Link to="/resume" className="px-6 py-2.5 bg-white text-blue-600 border-2 border-blue-600 rounded-xl font-medium hover:bg-blue-50 transition-all duration-300 flex items-center justify-center gap-2">
-          <FileText className="w-4 h-4" />
-          {resumes.length === 0 ? 'Cadastrar Currículo' : 'Atualizar Currículo'}
+          <FileText className="w-4 h-4" /> {resumes.length === 0 ? 'Cadastrar Currículo' : 'Atualizar Currículo'}
         </Link>
       </div>
     </div>
