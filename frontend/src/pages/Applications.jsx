@@ -7,18 +7,15 @@ import { toast } from 'react-toastify';
 
 const Applications = () => {
   const [searchParams] = useSearchParams();
-  const { isRecruiter, user } = useAuth();
+  const { isRecruiter } = useAuth();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedJob, setSelectedJob] = useState(null);
   const [recruiterJobs, setRecruiterJobs] = useState([]);
-  const [jobs, setJobs] = useState({});
 
   useEffect(() => {
     const jobId = searchParams.get('jobId');
-    if (jobId) {
-      setSelectedJob(parseInt(jobId));
-    }
+    if (jobId) setSelectedJob(parseInt(jobId));
     fetchData();
   }, [searchParams]);
 
@@ -26,42 +23,21 @@ const Applications = () => {
     setLoading(true);
     try {
       if (isRecruiter) {
-        // Para recrutador: buscar vagas e candidaturas
         const jobsRes = await jobsAPI.getRecruiterJobs();
         setRecruiterJobs(jobsRes.data);
-        
         if (selectedJob) {
           const appsRes = await applicationsAPI.getByJob(selectedJob);
           setApplications(appsRes.data);
         } else if (jobsRes.data.length > 0) {
-          // Se não tem vaga selecionada, mostra a primeira
           setSelectedJob(jobsRes.data[0].id);
           const appsRes = await applicationsAPI.getByJob(jobsRes.data[0].id);
           setApplications(appsRes.data);
         }
       } else {
-        // Para candidato: buscar todas as candidaturas do usuário
-        console.log('Buscando candidaturas do candidato...');
         const appsRes = await applicationsAPI.getMy();
-        console.log('Candidaturas encontradas:', appsRes.data);
         setApplications(appsRes.data);
-        
-        // Buscar detalhes das vagas para mostrar o título
-        const jobsMap = {};
-        for (const app of appsRes.data) {
-          if (!jobsMap[app.job_id]) {
-            try {
-              const jobRes = await jobsAPI.getById(app.job_id);
-              jobsMap[app.job_id] = jobRes.data;
-            } catch (err) {
-              console.error(`Erro ao buscar vaga ${app.job_id}:`, err);
-            }
-          }
-        }
-        setJobs(jobsMap);
       }
     } catch (error) {
-      console.error('Erro ao carregar candidaturas:', error);
       toast.error('Erro ao carregar candidaturas');
     } finally {
       setLoading(false);
@@ -78,170 +54,94 @@ const Applications = () => {
     }
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    return 'text-red-600';
+  const getScoreClass = (score) => {
+    if (score >= 80) return 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300';
+    if (score >= 60) return 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300';
+    if (score >= 40) return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300';
+    return 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300';
   };
 
-  const getStatusText = (status) => {
-    const statusMap = {
-      pending: 'Pendente',
-      reviewed: 'Em Análise',
-      rejected: 'Recusado',
-      accepted: 'Aprovado'
-    };
-    return statusMap[status] || status;
-  };
-
-  const getStatusBadge = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      reviewed: 'bg-blue-100 text-blue-800',
-      rejected: 'bg-red-100 text-red-800',
-      accepted: 'bg-green-100 text-green-800'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const handleJobChange = async (jobId) => {
-    setSelectedJob(parseInt(jobId));
-    setLoading(true);
-    try {
-      const appsRes = await applicationsAPI.getByJob(jobId);
-      setApplications(appsRes.data);
-    } catch (error) {
-      console.error('Erro ao buscar candidaturas:', error);
-    } finally {
-      setLoading(false);
-    }
+  const getScoreCircleClass = (score) => {
+    if (score >= 80) return 'bg-green-500';
+    if (score >= 60) return 'bg-blue-500';
+    if (score >= 40) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-xl text-gray-600">Carregando candidaturas...</div>
+      <div className="min-h-screen flex justify-center items-center bg-gray-50 dark:bg-gray-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">
-        {isRecruiter ? 'Candidaturas Recebidas' : 'Minhas Candidaturas'}
-      </h1>
+    <div className="min-h-screen py-12 px-4 bg-gray-50 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">{isRecruiter ? 'Candidaturas Recebidas' : 'Minhas Candidaturas'}</h1>
 
-      {isRecruiter && recruiterJobs.length > 0 && (
-        <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Selecione uma vaga
-          </label>
-          <select
-            className="w-full max-w-md px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-            value={selectedJob || ''}
-            onChange={(e) => handleJobChange(e.target.value)}
-          >
-            <option value="">Selecione uma vaga</option>
-            {recruiterJobs.map(job => (
-              <option key={job.id} value={job.id}>
-                {job.title} - {job.company}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
+        {isRecruiter && recruiterJobs.length > 0 && (
+          <div className="mb-8">
+            <select className="w-full max-w-md px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white" value={selectedJob || ''} onChange={(e) => setSelectedJob(parseInt(e.target.value))}>
+              <option value="">Selecione uma vaga</option>
+              {recruiterJobs.map(job => <option key={job.id} value={job.id}>{job.title}</option>)}
+            </select>
+          </div>
+        )}
 
-      {applications.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow">
-          <p className="text-gray-500 text-lg">
-            {isRecruiter 
-              ? 'Nenhuma candidatura recebida para esta vaga ainda.'
-              : 'Você ainda não se candidatou a nenhuma vaga.'}
-          </p>
-          {!isRecruiter && (
-            <button
-              onClick={() => window.location.href = '/jobs'}
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-            >
-              Buscar Vagas
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {applications.map((app) => (
-            <div key={app.id} className="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4 mb-3">
-                    <h3 className="text-xl font-semibold">
-                      {isRecruiter 
-                        ? app.candidate_name || `Candidato #${app.candidate_id}`
-                        : jobs[app.job_id]?.title || `Vaga #${app.job_id}`
-                      }
-                    </h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(app.status)}`}>
-                      {getStatusText(app.status)}
-                    </span>
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-600">Score de Compatibilidade:</span>
-                      <span className={`text-2xl font-bold ${getScoreColor(app.compatibility_score)}`}>
-                        {app.compatibility_score || 0}%
-                      </span>
+        {applications.length === 0 ? (
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-12 text-center border border-gray-200 dark:border-gray-700">
+            <p className="text-gray-500 dark:text-gray-400">Nenhuma candidatura encontrada.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {applications.map((app) => (
+              <div key={app.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border border-gray-200 dark:border-gray-700">
+                <div className="p-6">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{isRecruiter ? app.candidate_name : `Vaga #${app.job_id}`}</h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${app.status === 'accepted' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' : app.status === 'rejected' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' : app.status === 'reviewed' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'}`}>
+                          {app.status === 'accepted' ? '✅ Aprovado' : app.status === 'rejected' ? '❌ Recusado' : app.status === 'reviewed' ? '📝 Em Análise' : '⏳ Pendente'}
+                        </span>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className={`w-16 h-16 rounded-full ${getScoreCircleClass(app.compatibility_score)} flex items-center justify-center shadow-md`}>
+                          <span className="text-white font-bold text-lg">{app.compatibility_score || 0}%</span>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Score de Compatibilidade</p>
+                          <div className="w-40 h-2 bg-gray-200 dark:bg-gray-700 rounded-full mt-1 overflow-hidden">
+                            <div className="h-2 rounded-full bg-gradient-to-r from-blue-500 to-teal-500 transition-all duration-500" style={{ width: `${app.compatibility_score || 0}%` }}></div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <p className="text-xs text-gray-400">📅 Candidatado em: {new Date(app.applied_at).toLocaleDateString('pt-BR')}</p>
                     </div>
-                    {app.ai_feedback && (
-                      <div className="mt-2 p-3 bg-gray-50 rounded">
-                        <p className="text-sm text-gray-700">{app.ai_feedback}</p>
+
+                    {isRecruiter && app.status === 'pending' && (
+                      <div className="flex gap-2">
+                        <button onClick={() => handleStatusChange(app.id, 'reviewed')} className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">Iniciar Análise</button>
+                        <button onClick={() => handleStatusChange(app.id, 'rejected')} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">Recusar</button>
+                      </div>
+                    )}
+                    {isRecruiter && app.status === 'reviewed' && (
+                      <div className="flex gap-2">
+                        <button onClick={() => handleStatusChange(app.id, 'accepted')} className="px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm">Aprovar</button>
+                        <button onClick={() => handleStatusChange(app.id, 'rejected')} className="px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm">Recusar</button>
                       </div>
                     )}
                   </div>
-
-                  <p className="text-xs text-gray-400">
-                    Candidatado em: {new Date(app.applied_at).toLocaleDateString('pt-BR')}
-                  </p>
                 </div>
-
-                {isRecruiter && app.status === 'pending' && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleStatusChange(app.id, 'reviewed')}
-                      className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm transition"
-                    >
-                      Iniciar Análise
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(app.id, 'rejected')}
-                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm transition"
-                    >
-                      Recusar
-                    </button>
-                  </div>
-                )}
-
-                {isRecruiter && app.status === 'reviewed' && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleStatusChange(app.id, 'accepted')}
-                      className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-sm transition"
-                    >
-                      Aprovar
-                    </button>
-                    <button
-                      onClick={() => handleStatusChange(app.id, 'rejected')}
-                      className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm transition"
-                    >
-                      Recusar
-                    </button>
-                  </div>
-                )}
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
