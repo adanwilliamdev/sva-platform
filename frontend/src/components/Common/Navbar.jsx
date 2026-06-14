@@ -1,16 +1,25 @@
-﻿import React from 'react';
+﻿import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Briefcase, LogOut, UserCircle } from 'lucide-react';
-import ThemeToggle from './ThemeToggle';
+import { Briefcase, LayoutDashboard, Users, LogOut, UserCircle, Bell, Search, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const Navbar = () => {
   const { user, logout, isAuthenticated } = useAuth();
+  const { darkMode, toggleDarkMode } = useTheme();
   const navigate = useNavigate();
+  const [searchQuery, setSearchQuery] = useState('');
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/jobs?search=${searchQuery}`);
+    }
   };
 
   return (
@@ -25,18 +34,51 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center space-x-1">
-            <Link to="/jobs" className="px-4 py-2 rounded-lg text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-              Vagas
+            <Link to="/dashboard" className="flex items-center gap-2 px-4 py-2 rounded-lg text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Dashboard</span>
+            </Link>
+            <Link to="/jobs" className="flex items-center gap-2 px-4 py-2 rounded-lg text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+              <Briefcase className="w-4 h-4" />
+              <span>Vagas</span>
             </Link>
             {isAuthenticated && (
-              <Link to="/dashboard" className="px-4 py-2 rounded-lg text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                Dashboard
+              <Link to="/applications" className="flex items-center gap-2 px-4 py-2 rounded-lg text-secondary hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+                <Users className="w-4 h-4" />
+                <span>Candidatos</span>
               </Link>
             )}
           </div>
 
           <div className="flex items-center space-x-3">
-            <ThemeToggle />
+            {/* Global Search */}
+            <form onSubmit={handleSearch} className="hidden lg:flex items-center">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar vagas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-2 border border-default rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 text-primary w-64"
+                />
+              </div>
+            </form>
+
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleDarkMode}
+              className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+
+            {/* Notifications Bell */}
+            <button className="relative w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-800 transition">
+              <Bell className="w-5 h-5 text-secondary" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+
             {isAuthenticated ? (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-gray-800">
