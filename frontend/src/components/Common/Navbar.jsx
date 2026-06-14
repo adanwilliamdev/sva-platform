@@ -13,43 +13,38 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="glass-effect sticky top-0 z-50 shadow-lg">
+    <nav className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-50">
       <div className="container mx-auto px-6">
         <div className="flex justify-between items-center h-16">
-          <Link to="/" className="flex items-center space-x-2 group">
-            <Briefcase className="w-8 h-8 text-blue-600 group-hover:scale-110 transition duration-300" />
+          <Link to="/" className="flex items-center space-x-2">
+            <Briefcase className="w-8 h-8 text-blue-600" />
             <span className="text-xl font-bold gradient-text">SVA Platform</span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-1">
-            <Link to="/jobs" className="nav-link flex items-center space-x-1 px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 transition">
-              <Briefcase className="w-4 h-4" />
-              <span>Vagas</span>
+            <Link to="/jobs" className="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+              Vagas
             </Link>
             
             {isAuthenticated && (
               <>
-                <Link to="/dashboard" className="nav-link flex items-center space-x-1 px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 transition">
-                  <Home className="w-4 h-4" />
-                  <span>Dashboard</span>
+                <Link to="/dashboard" className="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                  Dashboard
                 </Link>
                 
                 {isRecruiter && (
-                  <Link to="/post-job" className="nav-link flex items-center space-x-1 px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 transition">
-                    <PlusCircle className="w-4 h-4" />
-                    <span>Nova Vaga</span>
+                  <Link to="/post-job" className="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                    Nova Vaga
                   </Link>
                 )}
                 
                 {isCandidate && (
                   <>
-                    <Link to="/resume" className="nav-link flex items-center space-x-1 px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 transition">
-                      <FileText className="w-4 h-4" />
-                      <span>Meu Currículo</span>
+                    <Link to="/resume" className="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                      Meu Currículo
                     </Link>
-                    <Link to="/applications" className="nav-link flex items-center space-x-1 px-4 py-2 rounded-lg text-gray-700 hover:text-blue-600 transition">
-                      <ClipboardList className="w-4 h-4" />
-                      <span>Minhas Candidaturas</span>
+                    <Link to="/applications" className="px-4 py-2 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition">
+                      Minhas Candidaturas
                     </Link>
                   </>
                 )}
@@ -60,30 +55,25 @@ const Navbar = () => {
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 bg-gradient-to-r from-blue-50 to-emerald-50 px-4 py-2 rounded-full group-hover:scale-105 transition">
+                <div className="flex items-center space-x-2 bg-blue-50 dark:bg-gray-700 px-4 py-2 rounded-full">
                   <UserCircle className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-700">{user?.full_name?.split(' ')[0]}</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {user?.full_name?.split(' ')[0]}
+                  </span>
                 </div>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-300 transform hover:scale-105 shadow-md hover:shadow-lg"
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sair</span>
+                  Sair
                 </button>
               </div>
             ) : (
               <div className="flex items-center space-x-3">
-                <Link
-                  to="/login"
-                  className="px-5 py-2 text-blue-600 border-2 border-blue-600 rounded-lg btn-outline font-medium"
-                >
+                <Link to="/login" className="px-5 py-2 text-blue-600 border-2 border-blue-600 rounded-lg hover:bg-blue-50 transition">
                   Entrar
                 </Link>
-                <Link
-                  to="/register"
-                  className="px-5 py-2 btn-gradient text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105"
-                >
+                <Link to="/register" className="px-5 py-2 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-lg shadow-md hover:shadow-lg transition">
                   Cadastrar
                 </Link>
               </div>

@@ -18,20 +18,18 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
           <Navbar />
           <ToastContainer 
             position="top-right"
             autoClose={4000}
             hideProgressBar={false}
-            newestOnTop={false}
+            newestOnTop
             closeOnClick
             rtl={false}
             pauseOnFocusLoss
             draggable
             pauseOnHover
-            theme="light"
-            style={{ top: "70px" }}
           />
           <Routes>
             <Route path="/" element={<Home />} />

@@ -16,11 +16,20 @@ body {
   min-height: 100vh;
 }
 
+.dark body {
+  background: linear-gradient(135deg, #1e1b4b 0%, #064e3b 100%);
+}
+
 /* Glass Effect */
 .glass-effect {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.dark .glass-effect {
+  background: rgba(31, 41, 55, 0.95);
+  border-bottom: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 /* Cards */
@@ -31,6 +40,10 @@ body {
 .card-hover:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
+}
+
+.dark .card-hover:hover {
+  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.4);
 }
 
 /* Gradiente de texto */
@@ -58,16 +71,6 @@ body {
   transform: translateY(0);
 }
 
-/* Botões outline */
-.btn-outline {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.btn-outline:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.2);
-}
-
 /* Stats cards */
 .stat-card {
   background: white;
@@ -76,46 +79,15 @@ body {
   border: 1px solid rgba(59, 130, 246, 0.1);
 }
 
+.dark .stat-card {
+  background: rgb(31, 41, 55);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
 .stat-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.15);
   border-color: rgba(59, 130, 246, 0.3);
-}
-
-/* Job cards */
-.job-card {
-  background: white;
-  border-radius: 16px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid #e5e7eb;
-}
-
-.job-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.12);
-  border-color: #3b82f6;
-}
-
-/* Links */
-.nav-link {
-  transition: all 0.2s ease;
-  position: relative;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: linear-gradient(135deg, #3b82f6, #10b981);
-  transition: all 0.3s ease;
-  transform: translateX(-50%);
-}
-
-.nav-link:hover::after {
-  width: 80%;
 }
 
 /* Animações */
@@ -164,6 +136,34 @@ body {
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* Scrollbar personalizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }
 
 /* Responsividade */
