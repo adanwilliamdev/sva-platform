@@ -12,4 +12,7 @@ class Resume(Base):
     experience = Column(Text)
     education = Column(Text)
     raw_text = Column(Text)
+    file_url = Column(String, nullable=True)
+    file_name = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())

@@ -47,7 +47,6 @@ def get_recruiter_jobs(
     jobs = db.query(Job).filter(Job.recruiter_id == current_user.id).all()
     return jobs
 
-# NOVO ENDPOINT: Buscar vaga por ID
 @router.get("/{job_id}", response_model=JobResponse)
 def get_job_by_id(
     job_id: int,
@@ -58,3 +57,24 @@ def get_job_by_id(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return job
+
+# ROTA PARA ATUALIZAR STATUS DA VAGA (ENCERRAR/REABRIR)
+@router.put("/{job_id}")
+def update_job_status(
+    job_id: int,
+    is_active: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    if job.recruiter_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    job.is_active = is_active
+    db.commit()
+    
+    status_text = "encerrada" if is_active == 0 else "reativada"
+    return {"message": f"Vaga {status_text} com sucesso"}

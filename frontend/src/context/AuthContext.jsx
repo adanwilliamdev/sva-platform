@@ -28,6 +28,7 @@ export const AuthProvider = ({ children }) => {
   const loadUser = async () => {
     try {
       const response = await api.get('/auth/me');
+      console.log('Usuário carregado:', response.data);
       setUser(response.data);
     } catch (error) {
       console.error('Failed to load user:', error);
@@ -74,6 +75,12 @@ export const AuthProvider = ({ children }) => {
     isRecruiter: user?.user_type === 'recruiter',
     isCandidate: user?.user_type === 'candidate'
   };
+
+  console.log('AuthProvider state:', { 
+    user: value.user, 
+    isRecruiter: value.isRecruiter, 
+    isCandidate: value.isCandidate 
+  });
 
   return (
     <AuthContext.Provider value={value}>

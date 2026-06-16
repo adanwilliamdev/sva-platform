@@ -1,18 +1,20 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { resumesAPI } from '../services/resumes';
 import { toast } from 'react-toastify';
-import { FileText, Plus, Trash2, Clock, Save, X } from 'lucide-react';
+import { FileText, Plus, Trash2, Clock, Save, X, Upload, CheckCircle } from 'lucide-react';
+import api from '../services/api';
 
 const Resume = () => {
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     skills: '',
     experience: '',
     education: '',
-    raw_text: ''
+    file: null
   });
 
   useEffect(() => { fetchResumes(); }, []);
@@ -28,91 +30,177 @@ const Resume = () => {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (window.confirm('Tem certeza que deseja excluir este currículo?')) {
+      try {
+        await api.delete(`/resumes/${id}`);
+        toast.success('Currículo excluído com sucesso!');
+        fetchResumes();
+      } catch (error) {
+        toast.error('Erro ao excluir currículo');
+      }
+    }
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Apenas arquivos PDF e DOCX são permitidos');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Arquivo muito grande. Máximo 5MB');
+        return;
+      }
+      setFormData({ ...formData, file });
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const resumeData = {
-      ...formData,
-      skills: JSON.stringify(formData.skills.split(',').map(s => s.trim())),
-      experience: JSON.stringify(formData.experience.split('\n').filter(exp => exp.trim())),
-      education: JSON.stringify(formData.education.split('\n').filter(edu => edu.trim()))
-    };
+    setUploading(true);
+    
+    const formDataToSend = new FormData();
+    formDataToSend.append('title', formData.title);
+    if (formData.skills) formDataToSend.append('skills', JSON.stringify(formData.skills.split(',').map(s => s.trim())));
+    if (formData.experience) formDataToSend.append('experience', JSON.stringify(formData.experience.split('\n').filter(exp => exp.trim())));
+    if (formData.education) formDataToSend.append('education', JSON.stringify(formData.education.split('\n').filter(edu => edu.trim())));
+    if (formData.file) formDataToSend.append('file', formData.file);
+    
     try {
-      await resumesAPI.create(resumeData);
+      await api.post('/resumes/', formDataToSend, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
       toast.success('Currículo cadastrado com sucesso!');
       setShowForm(false);
-      setFormData({ title: '', skills: '', experience: '', education: '', raw_text: '' });
+      setFormData({ title: '', skills: '', experience: '', education: '', file: null });
       fetchResumes();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erro ao cadastrar currículo');
+    } finally {
+      setUploading(false);
     }
   };
 
   const handleChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <div className="flex justify-center items-center h-96"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-          <div className="gradient-bg px-8 py-6">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <FileText className="w-8 h-8 text-white" />
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-teal-600 px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <FileText className="w-6 h-6 text-white" />
+              <div>
+                <h1 className="text-xl font-bold text-white">Meus Currículos</h1>
+                <p className="text-white/80 text-sm">Gerencie seus currículos cadastrados</p>
+              </div>
+            </div>
+            {!showForm && (
+              <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-white transition">
+                <Plus className="w-4 h-4" />
+                Novo Currículo
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6">
+          {showForm && (
+            <div className="mb-8 bg-slate-50 rounded-xl p-6 border border-slate-200">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg font-semibold text-slate-900">Novo Currículo</h2>
+                <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <h1 className="text-2xl font-bold text-white">Meus Currículos</h1>
-                  <p className="text-white/80 text-sm">Gerencie seus currículos cadastrados</p>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Título *</label>
+                  <input type="text" name="title" required className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" value={formData.title} onChange={handleChange} placeholder="Ex: Desenvolvedor Full Stack - 2024" />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Upload do Currículo (PDF/DOCX)</label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition">
+                    <input type="file" accept=".pdf,.docx" onChange={handleFileChange} className="hidden" id="file-upload" />
+                    <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
+                      <Upload className="w-10 h-10 text-slate-400 mb-2" />
+                      <p className="text-slate-600">Clique para fazer upload</p>
+                      <p className="text-xs text-slate-400 mt-1">PDF ou DOCX (max. 5MB)</p>
+                    </label>
+                  </div>
+                  {formData.file && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-green-600">
+                      <CheckCircle className="w-4 h-4" />
+                      Arquivo selecionado: {formData.file.name}
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Habilidades (separadas por vírgula)</label>
+                  <input type="text" name="skills" className="w-full px-4 py-2 border border-slate-200 rounded-xl" value={formData.skills} onChange={handleChange} placeholder="Python, React, SQL, Git" />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Experiência (uma por linha)</label>
+                  <textarea name="experience" rows="4" className="w-full px-4 py-2 border border-slate-200 rounded-xl" value={formData.experience} onChange={handleChange} />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Formação (uma por linha)</label>
+                  <textarea name="education" rows="3" className="w-full px-4 py-2 border border-slate-200 rounded-xl" value={formData.education} onChange={handleChange} />
+                </div>
+                
+                <button type="submit" disabled={uploading} className="w-full btn-primary justify-center">
+                  {uploading ? <><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> Enviando...</> : <><Save className="w-4 h-4" /> Salvar Currículo</>}
+                </button>
+              </form>
+            </div>
+          )}
+
+          <div className="space-y-4">
+            {resumes.map(resume => (
+              <div key={resume.id} className="bg-white border border-slate-200 rounded-xl p-5 hover:shadow-md transition">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-5 h-5 text-blue-600" />
+                      <h3 className="text-lg font-semibold text-slate-900">{resume.title}</h3>
+                    </div>
+                    {resume.file_name && (
+                      <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
+                        <FileText className="w-3 h-3" />
+                        {resume.file_name}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 text-xs text-slate-400">
+                      <Clock className="w-3 h-3" />
+                      Criado em: {new Date(resume.created_at).toLocaleDateString('pt-BR')}
+                    </div>
+                  </div>
+                  <button onClick={() => handleDelete(resume.id)} className="text-red-500 hover:text-red-600 transition">
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-              {!showForm && (
-                <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl text-white transition">
-                  <Plus className="w-4 h-4" />
-                  Novo Currículo
+            ))}
+            {resumes.length === 0 && !showForm && (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500">Nenhum currículo cadastrado ainda.</p>
+                <button onClick={() => setShowForm(true)} className="mt-4 text-blue-600 hover:text-blue-700 font-medium">
+                  Cadastrar meu primeiro currículo →
                 </button>
-              )}
-            </div>
-          </div>
-
-          <div className="p-8">
-            {showForm && (
-              <div className="mb-8 bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-800">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Novo Currículo</h2>
-                  <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
-                </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Título *</label><input type="text" name="title" required className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" value={formData.title} onChange={handleChange} placeholder="Ex: Desenvolvedor Full Stack - 2024" /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Habilidades (separadas por vírgula)</label><input type="text" name="skills" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" value={formData.skills} onChange={handleChange} placeholder="Python, React, SQL, Git" /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Experiência (uma por linha)</label><textarea name="experience" rows="4" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" value={formData.experience} onChange={handleChange} /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Formação (uma por linha)</label><textarea name="education" rows="3" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" value={formData.education} onChange={handleChange} /></div>
-                  <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Texto Completo (opcional)</label><textarea name="raw_text" rows="4" className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" value={formData.raw_text} onChange={handleChange} placeholder="Cole aqui o texto completo do seu currículo para análise mais precisa" /></div>
-                  <button type="submit" className="w-full btn-primary py-2 rounded-xl font-semibold flex items-center justify-center gap-2"><Save className="w-4 h-4" /> Salvar Currículo</button>
-                </form>
               </div>
             )}
-
-            <div className="space-y-4">
-              {resumes.map(resume => (
-                <div key={resume.id} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 hover:shadow-lg transition">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">{resume.title}</h3>
-                      <div className="flex items-center gap-2 text-xs text-gray-400"><Clock className="w-3 h-3" /> Criado em: {new Date(resume.created_at).toLocaleDateString('pt-BR')}</div>
-                    </div>
-                    <button className="text-red-500 hover:text-red-600 transition"><Trash2 className="w-5 h-5" /></button>
-                  </div>
-                </div>
-              ))}
-              {resumes.length === 0 && !showForm && (
-                <div className="text-center py-12"><FileText className="w-16 h-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" /><p className="text-gray-500 dark:text-gray-400">Nenhum currículo cadastrado ainda.</p><button onClick={() => setShowForm(true)} className="mt-4 text-blue-600 hover:text-blue-700 font-medium">Cadastrar meu primeiro currículo →</button></div>
-              )}
-            </div>
           </div>
         </div>
       </div>

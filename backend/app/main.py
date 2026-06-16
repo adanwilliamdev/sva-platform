@@ -1,20 +1,26 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
-from app.routers import auth, resumes, jobs, applications
+from app.routers import auth, resumes, jobs, applications, chat
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="SVA - Sua Vaga Aqui API", version="1.0.0")
 
-# CORS middleware
+# Configuração CORS - Permitir todas as origens em desenvolvimento
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",     # Frontend React
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "*"  # Permitir todas em desenvolvimento (opcional, mas útil)
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Permitir todos os métodos (GET, POST, PUT, DELETE, OPTIONS)
+    allow_headers=["*"],  # Permitir todos os headers
+    expose_headers=["*"], # Expor headers para o frontend
 )
 
 # Include routers
@@ -22,6 +28,7 @@ app.include_router(auth.router)
 app.include_router(resumes.router)
 app.include_router(jobs.router)
 app.include_router(applications.router)
+app.include_router(chat.router)
 
 @app.get("/")
 def root():
