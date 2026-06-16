@@ -25,27 +25,43 @@ const Applications = () => {
 
   useEffect(() => {
     const id = searchParams.get('jobId');
-    setJobId(id);
-    fetchApplications();
+    console.log('🔍 Job ID da URL:', id);
+    if (id) {
+      setJobId(parseInt(id));
+    }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (jobId) {
+      fetchApplications();
+    }
+  }, [jobId]);
+
   const fetchApplications = async () => {
+    if (!jobId) {
+      console.log('⚠️ Nenhum jobId encontrado');
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
+    console.log('📡 Buscando candidaturas para vaga:', jobId);
+    
     try {
-      if (isRecruiter && jobId) {
+      if (isRecruiter) {
         const response = await applicationsAPI.getByJob(jobId);
+        console.log('📥 Candidaturas recebidas:', response.data);
         setApplications(response.data || []);
         
-        // Buscar título da vaga
         const jobsRes = await jobsAPI.getRecruiterJobs();
-        const job = jobsRes.data.find(j => j.id === parseInt(jobId));
+        const job = jobsRes.data.find(j => j.id === jobId);
         setJobTitle(job?.title || `Vaga #${jobId}`);
       } else {
         const response = await applicationsAPI.getMy();
         setApplications(response.data || []);
       }
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('❌ Erro ao carregar candidaturas:', error);
       toast.error('Erro ao carregar candidaturas');
       setApplications([]);
     } finally {
@@ -115,7 +131,7 @@ const Applications = () => {
       return;
     }
     
-    if (window.confirm('⚠️ Tem certeza que deseja encerrar esta vaga? Ela não receberá mais candidaturas.')) {
+    if (window.confirm('⚠️ Tem certeza que deseja encerrar esta vaga?')) {
       try {
         const token = localStorage.getItem('token');
         const response = await fetch(`http://localhost:8000/jobs/${jobId}?is_active=0`, {
@@ -233,7 +249,6 @@ const Applications = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-2 items-center">
-                    {/* Ver Currículo */}
                     {isRecruiter && (
                       <button
                         onClick={() => handleViewResume(app.resume_id, app.candidate_name)}
@@ -243,7 +258,6 @@ const Applications = () => {
                       </button>
                     )}
                     
-                    {/* Chat */}
                     {isRecruiter && (
                       <button
                         onClick={() => handleStartChat(app.candidate_id)}
@@ -253,7 +267,6 @@ const Applications = () => {
                       </button>
                     )}
 
-                    {/* Ações de status */}
                     {isRecruiter && app.status === 'pending' && (
                       <>
                         <button onClick={() => handleStatusChange(app.id, 'reviewed')} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Analisar</button>
@@ -275,14 +288,11 @@ const Applications = () => {
         </div>
       )}
 
-      {/* Modal do Currículo */}
       {showResumeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl">
             <div className="flex justify-between items-center p-4 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-slate-900">
-                📄 Currículo - {selectedResume?.candidate_name}
-              </h2>
+              <h2 className="text-xl font-bold text-slate-900">📄 Currículo - {selectedResume?.candidate_name}</h2>
               <button onClick={() => setShowResumeModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="w-6 h-6" />
               </button>

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { applicationsAPI } from '../../services/applications';
 import { resumesAPI } from '../../services/resumes';
 import { useAuth } from '../../context/AuthContext';
-import { FileText, ClipboardList, TrendingUp, Star, Eye, Calendar, Award } from 'lucide-react';
+import { FileText, ClipboardList, TrendingUp, Star, Eye, Calendar } from 'lucide-react';
 
 const DashboardCandidato = () => {
   const { user } = useAuth();
@@ -11,14 +11,26 @@ const DashboardCandidato = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     try {
-      const [resumesRes, appsRes] = await Promise.all([resumesAPI.getAll(), applicationsAPI.getMy()]);
+      console.log('📡 Buscando dados do candidato...');
+      const [resumesRes, appsRes] = await Promise.all([
+        resumesAPI.getAll(),
+        applicationsAPI.getMy()
+      ]);
+      console.log('📥 Currículos:', resumesRes.data);
+      console.log('📥 Candidaturas:', appsRes.data);
       setResumes(resumesRes.data);
       setApplications(appsRes.data);
-    } catch (error) { console.error(error); } finally { setLoading(false); }
+    } catch (error) {
+      console.error('❌ Erro:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const avgScore = applications.length > 0 
@@ -29,12 +41,31 @@ const DashboardCandidato = () => {
     : 0;
 
   const getStatusText = (status) => {
-    const map = { accepted: 'Aprovado', rejected: 'Recusado', reviewed: 'Em análise', pending: 'Pendente' };
+    const map = { 
+      accepted: 'Aprovado', 
+      rejected: 'Recusado', 
+      reviewed: 'Em análise', 
+      pending: 'Pendente' 
+    };
     return map[status] || status;
   };
 
+  const getStatusColor = (status) => {
+    switch(status) {
+      case 'accepted': return 'bg-green-100 text-green-700';
+      case 'rejected': return 'bg-red-100 text-red-700';
+      case 'reviewed': return 'bg-blue-100 text-blue-700';
+      default: return 'bg-yellow-100 text-yellow-700';
+    }
+  };
+
   if (loading) {
-    return <div className="flex justify-center items-center h-48"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <p className="ml-3 text-slate-500">Carregando...</p>
+      </div>
+    );
   }
 
   const stats = [
@@ -48,7 +79,7 @@ const DashboardCandidato = () => {
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Olá, {user?.full_name?.split(' ')[0]}! 👋</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Olá, {user?.full_name?.split(' ')[0] || 'Candidato'}! 👋</h1>
           <p className="text-slate-500 text-sm">Acompanhe suas candidaturas</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -59,13 +90,13 @@ const DashboardCandidato = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, i) => (
-          <div key={i} className="stat-card">
+          <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500 font-medium">{stat.title}</p>
                 <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
               </div>
-              <div className={`icon-wrapper ${stat.color}`}>
+              <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}>
                 <stat.icon className="w-6 h-6" />
               </div>
             </div>
@@ -79,10 +110,10 @@ const DashboardCandidato = () => {
       </div>
 
       {applications.length > 0 && (
-        <div className="card">
+        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="font-semibold text-slate-900">Últimas Candidaturas</h3>
+              <h3 className="font-semibold text-slate-900">📋 Últimas Candidaturas</h3>
               <p className="text-xs text-slate-500">Suas candidaturas mais recentes</p>
             </div>
             <Link to="/applications" className="text-sm text-blue-600 hover:underline font-medium">
@@ -97,11 +128,7 @@ const DashboardCandidato = () => {
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-sm font-bold text-blue-600">{app.compatibility_score || 0}%</span>
-                <span className={`badge ${
-                  app.status === 'accepted' ? 'badge-success' :
-                  app.status === 'rejected' ? 'badge-danger' :
-                  app.status === 'reviewed' ? 'badge-info' : 'badge-warning'
-                }`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
                   {getStatusText(app.status)}
                 </span>
               </div>
@@ -111,10 +138,11 @@ const DashboardCandidato = () => {
       )}
 
       {applications.length === 0 && (
-        <div className="card text-center py-12">
-          <Award className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
+          <ClipboardList className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500 text-lg">Nenhuma candidatura ainda</p>
           <p className="text-slate-400 text-sm">Comece a buscar vagas agora!</p>
+          <Link to="/jobs" className="mt-4 inline-block btn-primary">🔍 Buscar Vagas</Link>
         </div>
       )}
 
