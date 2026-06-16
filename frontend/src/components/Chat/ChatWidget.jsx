@@ -1,10 +1,11 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Minimize2, Maximize2, User } from 'lucide-react';
-import { chatAPI } from '../../services/chat';
+import { MessageCircle, X, Send, Minimize2, Maximize2 } from 'lucide-react';
+import { chatAPI, chatService } from '../../services/chat';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
 const ChatWidget = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [conversations, setConversations] = useState([]);
@@ -13,7 +14,21 @@ const ChatWidget = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
-  const { user } = useAuth();
+
+  // Conectar ao socket quando o usuário estiver logado
+  useEffect(() => {
+    if (user) {
+      const token = localStorage.getItem('token');
+      chatService.connect(token);
+      
+      chatService.onNewMessage(handleNewMessage);
+      
+      return () => {
+        chatService.removeListener(handleNewMessage);
+        chatService.disconnect();
+      };
+    }
+  }, [user]);
 
   useEffect(() => {
     if (isOpen) {
@@ -22,7 +37,8 @@ const ChatWidget = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    if (selectedConversation) {
+    if (selectedConversation && user) {
+      chatService.joinConversation(selectedConversation.id, user.id);
       loadMessages(selectedConversation.id);
     }
   }, [selectedConversation]);
@@ -59,17 +75,36 @@ const ChatWidget = () => {
     }
   };
 
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-    
-    try {
-      await chatAPI.sendMessage(selectedConversation.id, newMessage);
-      setNewMessage('');
-      loadMessages(selectedConversation.id);
-      loadConversations();
-    } catch (error) {
-      toast.error('Erro ao enviar mensagem');
+  const handleNewMessage = (data) => {
+    if (selectedConversation && data.conversation_id === selectedConversation.id) {
+      setMessages(prev => [...prev, data]);
     }
+    loadConversations();
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+    
+    // Enviar via socket
+    chatService.sendMessage(
+      selectedConversation.id,
+      newMessage,
+      user.id
+    );
+    
+    // Adicionar mensagem localmente (otimista)
+    const tempMessage = {
+      id: Date.now(),
+      conversation_id: selectedConversation.id,
+      sender_id: user.id,
+      sender_name: user.full_name,
+      message: newMessage,
+      created_at: new Date().toISOString(),
+      is_read: false
+    };
+    setMessages(prev => [...prev, tempMessage]);
+    setNewMessage('');
+    loadConversations();
   };
 
   const handleKeyPress = (e) => {
