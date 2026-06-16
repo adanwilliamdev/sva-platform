@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { MessageCircle, X, Send, Minimize2, Maximize2 } from 'lucide-react';
+import { MessageCircle, X, Send, Minimize2, Maximize2, User } from 'lucide-react';
 import { chatAPI } from '../../services/chat';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
@@ -66,7 +66,7 @@ const ChatWidget = () => {
       await chatAPI.sendMessage(selectedConversation.id, newMessage);
       setNewMessage('');
       loadMessages(selectedConversation.id);
-      loadConversations(); // Atualizar última mensagem
+      loadConversations();
     } catch (error) {
       toast.error('Erro ao enviar mensagem');
     }
@@ -83,15 +83,18 @@ const ChatWidget = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center z-50 group"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 group hover:scale-110"
       >
         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition" />
+        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+          {conversations.filter(c => c.unread_count > 0).length || 0}
+        </span>
       </button>
     );
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
+    <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-teal-600 px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -163,9 +166,9 @@ const ChatWidget = () => {
                         className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[70%] px-3 py-2 rounded-xl ${
+                          className={`max-w-[70%] px-4 py-2.5 rounded-2xl ${
                             msg.sender_id === user?.id
-                              ? 'bg-blue-600 text-white'
+                              ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white'
                               : 'bg-white border border-slate-200 text-slate-900'
                           }`}
                         >
@@ -182,7 +185,7 @@ const ChatWidget = () => {
               </div>
 
               {/* Input */}
-              <div className="p-3 border-t border-slate-200 flex gap-2">
+              <div className="p-3 border-t border-slate-200 flex gap-2 bg-white">
                 <textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}

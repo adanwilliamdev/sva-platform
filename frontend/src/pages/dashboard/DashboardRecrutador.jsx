@@ -96,12 +96,12 @@ const DashboardRecrutador = () => {
     { name: 'Recusados', value: stats.rejectedCount }
   ];
 
-  // Ranking de vagas
+  // Ranking de vagas - TOP 3
   const jobRanking = jobs.map(job => ({
     name: job.title,
     value: applications.filter(a => a.job_id === job.id).length,
     company: job.company
-  })).sort((a, b) => b.value - a.value).slice(0, 5);
+  })).sort((a, b) => b.value - a.value).slice(0, 3);
 
   const maxValue = Math.max(...jobRanking.map(j => j.value), 1);
 
@@ -127,7 +127,7 @@ const DashboardRecrutador = () => {
         </div>
       </div>
 
-      {/* Stats Cards com cores de fundo */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
           <div className="flex items-center justify-between">
@@ -236,14 +236,14 @@ const DashboardRecrutador = () => {
         </div>
       </div>
 
-      {/* Ranking das Vagas */}
+      {/* Ranking das Vagas - TOP 3 */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Award className="w-5 h-5 text-yellow-500" />
-          <h3 className="font-semibold text-slate-900">🏆 Ranking das Vagas</h3>
+          <h3 className="font-semibold text-slate-900">🏆 Top 3 Vagas</h3>
         </div>
         <div className="space-y-3">
-          {jobRanking.map((job, idx) => (
+          {jobRanking.slice(0, 3).map((job, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`}</span>
