@@ -34,7 +34,7 @@ const Applications = () => {
     try {
       if (isRecruiter && jobId) {
         const response = await applicationsAPI.getByJob(jobId);
-        setApplications(response.data);
+        setApplications(response.data || []);
         
         // Buscar título da vaga
         const jobsRes = await jobsAPI.getRecruiterJobs();
@@ -42,11 +42,12 @@ const Applications = () => {
         setJobTitle(job?.title || `Vaga #${jobId}`);
       } else {
         const response = await applicationsAPI.getMy();
-        setApplications(response.data);
+        setApplications(response.data || []);
       }
     } catch (error) {
       console.error('Erro:', error);
       toast.error('Erro ao carregar candidaturas');
+      setApplications([]);
     } finally {
       setLoading(false);
     }
@@ -109,23 +110,42 @@ const Applications = () => {
   };
 
   const handleCloseJob = async () => {
-    if (window.confirm('Tem certeza que deseja encerrar esta vaga?')) {
+    if (!jobId) {
+      toast.error('ID da vaga não encontrado');
+      return;
+    }
+    
+    if (window.confirm('⚠️ Tem certeza que deseja encerrar esta vaga? Ela não receberá mais candidaturas.')) {
       try {
-        await jobsAPI.updateStatus(jobId, 0);
-        toast.success('Vaga encerrada com sucesso!');
-        setTimeout(() => window.location.href = '/dashboard', 1500);
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8000/jobs/${jobId}?is_active=0`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          toast.success('✅ Vaga encerrada com sucesso!');
+          setTimeout(() => window.location.href = '/dashboard', 1500);
+        } else {
+          const error = await response.json();
+          toast.error('Erro ao encerrar vaga: ' + (error.message || 'Erro desconhecido'));
+        }
       } catch (error) {
-        toast.error('Erro ao encerrar vaga');
+        console.error('Erro:', error);
+        toast.error('Erro ao conectar com o servidor');
       }
     }
   };
 
   const getStatusInfo = (status) => {
     const map = {
-      pending: { text: 'Pendente', icon: Clock, color: 'badge-warning' },
-      reviewed: { text: 'Em Análise', icon: Eye, color: 'badge-info' },
-      accepted: { text: 'Aprovado', icon: CheckCircle, color: 'badge-success' },
-      rejected: { text: 'Recusado', icon: XCircle, color: 'badge-danger' }
+      pending: { text: 'Pendente', icon: Clock, color: 'bg-yellow-100 text-yellow-700' },
+      reviewed: { text: 'Em Análise', icon: Eye, color: 'bg-blue-100 text-blue-700' },
+      accepted: { text: 'Aprovado', icon: CheckCircle, color: 'bg-green-100 text-green-700' },
+      rejected: { text: 'Recusado', icon: XCircle, color: 'bg-red-100 text-red-700' }
     };
     return map[status] || map.pending;
   };
@@ -152,7 +172,7 @@ const Applications = () => {
             <h1 className="text-2xl font-bold text-slate-900">
               {isRecruiter ? `Candidaturas - ${jobTitle}` : 'Minhas Candidaturas'}
             </h1>
-            <p className="text-slate-500 text-sm">{applications.length} candidatura(s)</p>
+            <p className="text-slate-500 text-sm">{applications.length} candidatura(s) encontrada(s)</p>
           </div>
         </div>
         {isRecruiter && jobId && (
@@ -168,7 +188,11 @@ const Applications = () => {
       {applications.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <Briefcase className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500">Nenhuma candidatura encontrada</p>
+          <p className="text-slate-500 text-lg">Nenhuma candidatura encontrada</p>
+          <p className="text-slate-400 text-sm">Esta vaga ainda não recebeu candidaturas.</p>
+          <Link to="/dashboard" className="mt-4 inline-block text-blue-600 hover:text-blue-700">
+            Voltar para o Dashboard
+          </Link>
         </div>
       ) : (
         <div className="space-y-4">
@@ -185,7 +209,7 @@ const Applications = () => {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
                       <h3 className="font-semibold text-slate-900">{displayTitle}</h3>
-                      <span className={`badge ${status.color} flex items-center gap-1`}>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.color} flex items-center gap-1`}>
                         <StatusIcon className="w-3 h-3" /> {status.text}
                       </span>
                       {isRecruiter && app.status === 'pending' && (
