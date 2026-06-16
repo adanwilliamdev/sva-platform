@@ -23,33 +23,59 @@ const Applications = () => {
   const [resumeContent, setResumeContent] = useState('');
   const [loadingResume, setLoadingResume] = useState(false);
 
+  // Pegar o jobId da URL
   useEffect(() => {
     const id = searchParams.get('jobId');
     console.log('🔍 Job ID da URL:', id);
     if (id) {
       setJobId(parseInt(id));
+      fetchApplications(parseInt(id));
+    } else if (isRecruiter) {
+      // Recrutador sem jobId - buscar primeira vaga ativa
+      fetchFirstActiveJob();
+    } else {
+      // Candidato - buscar minhas candidaturas
+      fetchApplications(null);
     }
   }, [searchParams]);
 
-  useEffect(() => {
-    fetchApplications();
-  }, [jobId]);
+  const fetchFirstActiveJob = async () => {
+    try {
+      const jobsRes = await jobsAPI.getRecruiterJobs();
+      const activeJob = jobsRes.data.find(j => j.is_active === 1);
+      if (activeJob) {
+        console.log('🔍 Primeira vaga ativa:', activeJob.id, activeJob.title);
+        setJobId(activeJob.id);
+        setJobTitle(activeJob.title);
+        fetchApplications(activeJob.id);
+      } else {
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar vaga ativa:', error);
+      setLoading(false);
+    }
+  };
 
-  const fetchApplications = async () => {
+  const fetchApplications = async (id) => {
     setLoading(true);
-    console.log('📡 Buscando candidaturas...');
+    console.log('📡 Buscando candidaturas para:', id);
     
     try {
-      if (isRecruiter && jobId) {
-        console.log('🔍 Recrutador - Vaga ID:', jobId);
-        const response = await applicationsAPI.getByJob(jobId);
+      if (isRecruiter && id) {
+        // Recrutador: buscar candidaturas de uma vaga específica
+        console.log('🔍 Recrutador - Vaga ID:', id);
+        const response = await applicationsAPI.getByJob(id);
         console.log('📥 Candidaturas recebidas:', response.data);
         setApplications(response.data || []);
         
-        const jobsRes = await jobsAPI.getRecruiterJobs();
-        const job = jobsRes.data.find(j => j.id === jobId);
-        setJobTitle(job?.title || `Vaga #${jobId}`);
+        if (!jobTitle) {
+          const jobsRes = await jobsAPI.getRecruiterJobs();
+          const job = jobsRes.data.find(j => j.id === id);
+          setJobTitle(job?.title || `Vaga #${id}`);
+        }
       } else {
+        // Candidato: buscar todas as candidaturas do usuário
         console.log('👤 Candidato - Buscando minhas candidaturas...');
         const response = await applicationsAPI.getMy();
         console.log('📥 Candidaturas do candidato:', response.data);
@@ -69,7 +95,7 @@ const Applications = () => {
     try {
       await applicationsAPI.updateStatus(applicationId, newStatus);
       toast.success(`Status atualizado para ${newStatus}`);
-      fetchApplications();
+      fetchApplications(jobId);
     } catch (error) {
       toast.error('Erro ao atualizar status');
     }
@@ -215,6 +241,11 @@ const Applications = () => {
           {!isRecruiter && (
             <Link to="/jobs" className="mt-4 inline-block btn-primary">
               Buscar Vagas
+            </Link>
+          )}
+          {isRecruiter && (
+            <Link to="/post-job" className="mt-4 inline-block btn-primary">
+              Publicar Nova Vaga
             </Link>
           )}
         </div>

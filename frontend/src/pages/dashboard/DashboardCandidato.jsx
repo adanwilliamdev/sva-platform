@@ -120,20 +120,22 @@ const DashboardCandidato = () => {
               Ver todas →
             </Link>
           </div>
-          {applications.slice(0, 5).map(app => (
-            <div key={app.id} className="flex justify-between items-center py-3 border-b border-slate-100 last:border-0 hover:bg-slate-50 -mx-4 px-4 rounded-lg transition">
-              <div>
-                <p className="font-medium text-slate-900">Vaga #{app.job_id}</p>
-                <p className="text-xs text-slate-500">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</p>
+          <div className="space-y-3">
+            {applications.slice(0, 5).map(app => (
+              <div key={app.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
+                <div>
+                  <p className="font-medium text-slate-900">Vaga #{app.job_id}</p>
+                  <p className="text-xs text-slate-500">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-bold text-blue-600">{app.compatibility_score || 0}%</span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
+                    {getStatusText(app.status)}
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-blue-600">{app.compatibility_score || 0}%</span>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(app.status)}`}>
-                  {getStatusText(app.status)}
-                </span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 
