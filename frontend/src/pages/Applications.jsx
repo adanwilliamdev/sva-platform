@@ -32,23 +32,16 @@ const Applications = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (jobId) {
-      fetchApplications();
-    }
+    fetchApplications();
   }, [jobId]);
 
   const fetchApplications = async () => {
-    if (!jobId) {
-      console.log('⚠️ Nenhum jobId encontrado');
-      setLoading(false);
-      return;
-    }
-    
     setLoading(true);
-    console.log('📡 Buscando candidaturas para vaga:', jobId);
+    console.log('📡 Buscando candidaturas...');
     
     try {
-      if (isRecruiter) {
+      if (isRecruiter && jobId) {
+        console.log('🔍 Recrutador - Vaga ID:', jobId);
         const response = await applicationsAPI.getByJob(jobId);
         console.log('📥 Candidaturas recebidas:', response.data);
         setApplications(response.data || []);
@@ -57,8 +50,11 @@ const Applications = () => {
         const job = jobsRes.data.find(j => j.id === jobId);
         setJobTitle(job?.title || `Vaga #${jobId}`);
       } else {
+        console.log('👤 Candidato - Buscando minhas candidaturas...');
         const response = await applicationsAPI.getMy();
+        console.log('📥 Candidaturas do candidato:', response.data);
         setApplications(response.data || []);
+        setJobTitle('Minhas Candidaturas');
       }
     } catch (error) {
       console.error('❌ Erro ao carregar candidaturas:', error);
@@ -118,10 +114,16 @@ const Applications = () => {
 
   const handleStartChat = async (candidateId) => {
     try {
-      await chatAPI.startConversation(jobId);
-      toast.success('Chat iniciado!');
+      const response = await chatAPI.startConversation(jobId);
+      if (response.status === 200) {
+        toast.success('💬 Chat iniciado!');
+      }
     } catch (error) {
-      toast.error('Erro ao iniciar chat');
+      if (error.response?.status === 403) {
+        toast.info('💬 O candidato precisa iniciar a conversa primeiro');
+      } else {
+        toast.error('Erro ao iniciar chat');
+      }
     }
   };
 
@@ -186,7 +188,7 @@ const Applications = () => {
           </Link>
           <div>
             <h1 className="text-2xl font-bold text-slate-900">
-              {isRecruiter ? `Candidaturas - ${jobTitle}` : 'Minhas Candidaturas'}
+              {isRecruiter ? `Candidaturas - ${jobTitle}` : jobTitle || 'Minhas Candidaturas'}
             </h1>
             <p className="text-slate-500 text-sm">{applications.length} candidatura(s) encontrada(s)</p>
           </div>
@@ -205,10 +207,16 @@ const Applications = () => {
         <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
           <Briefcase className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500 text-lg">Nenhuma candidatura encontrada</p>
-          <p className="text-slate-400 text-sm">Esta vaga ainda não recebeu candidaturas.</p>
-          <Link to="/dashboard" className="mt-4 inline-block text-blue-600 hover:text-blue-700">
-            Voltar para o Dashboard
-          </Link>
+          <p className="text-slate-400 text-sm">
+            {isRecruiter 
+              ? 'Esta vaga ainda não recebeu candidaturas.' 
+              : 'Você ainda não se candidatou a nenhuma vaga.'}
+          </p>
+          {!isRecruiter && (
+            <Link to="/jobs" className="mt-4 inline-block btn-primary">
+              Buscar Vagas
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-4">
