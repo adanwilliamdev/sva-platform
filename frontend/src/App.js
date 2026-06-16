@@ -18,8 +18,9 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[#F1F5F9]">
           <Navbar />
+          <ToastContainer position="top-right" autoClose={4000} />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<Login />} />
@@ -30,7 +31,6 @@ function App() {
             <Route path="/resume" element={<PrivateRoute><Resume /></PrivateRoute>} />
             <Route path="/applications" element={<PrivateRoute><Applications /></PrivateRoute>} />
           </Routes>
-          <ToastContainer position="top-right" autoClose={4000} />
         </div>
       </Router>
     </AuthProvider>

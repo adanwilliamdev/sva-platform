@@ -18,7 +18,7 @@ const Login = () => {
     setLoading(true);
     try {
       await login(formData.username, formData.password);
-      toast.success('Login realizado com sucesso!');
+      toast.success('Login realizado com sucesso! 🎉');
       navigate('/dashboard');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erro ao fazer login');
@@ -26,17 +26,41 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-gray-50">
-      <div className="max-w-md w-full space-y-8">
-        <div><div className="flex justify-center"><div className="gradient-primary p-3 rounded-2xl"><Briefcase className="w-12 h-12 text-white" /></div></div><h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Bem-vindo de volta</h2><p className="mt-2 text-center text-sm text-gray-500">Faça login para continuar</p></div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div><label className="block text-sm font-medium text-gray-700 mb-2">Usuário</label><div className="relative"><div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Mail className="h-5 w-5 text-gray-400" /></div><input name="username" type="text" required className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-200 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Digite seu usuário" value={formData.username} onChange={handleChange} /></div></div>
-            <div><label className="block text-sm font-medium text-gray-700 mb-2">Senha</label><div className="relative"><div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><Lock className="h-5 w-5 text-gray-400" /></div><input name="password" type={showPassword ? 'text' : 'password'} required className="appearance-none relative block w-full pl-10 pr-12 py-3 border border-gray-200 placeholder-gray-500 text-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Digite sua senha" value={formData.password} onChange={handleChange} /><button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-3 flex items-center">{showPassword ? <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" /> : <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />}</button></div></div>
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#F1F5F9]">
+      <div className="max-w-md w-full card p-8">
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center shadow-lg">
+            <Briefcase className="w-8 h-8 text-white" />
           </div>
-          <div><button type="submit" disabled={loading} className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all duration-300 transform hover:scale-105 shadow-md">{loading ? <div className="flex items-center gap-2"><div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>Entrando...</div> : <div className="flex items-center gap-2">Entrar<ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition" /></div>}</button></div>
+        </div>
+        <h2 className="text-2xl font-bold text-center text-slate-900">Bem-vindo de volta</h2>
+        <p className="text-center text-slate-500 text-sm mb-6">Faça login para continuar</p>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Usuário</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input name="username" type="text" required className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Digite seu usuário" value={formData.username} onChange={handleChange} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Senha</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input name="password" type={showPassword ? 'text' : 'password'} required className="w-full pl-10 pr-12 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Digite sua senha" value={formData.password} onChange={handleChange} />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                {showPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
+              </button>
+            </div>
+          </div>
+          <button type="submit" disabled={loading} className="w-full btn-primary justify-center">
+            {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : 'Entrar'}
+          </button>
         </form>
-        <div className="text-center"><Link to="/register" className="text-sm text-blue-600 hover:text-blue-700 font-medium transition">Não tem uma conta? Cadastre-se gratuitamente →</Link></div>
+        <p className="text-center text-sm text-slate-500 mt-4">
+          Não tem uma conta? <Link to="/register" className="text-blue-600 hover:text-blue-700 font-medium">Cadastre-se</Link>
+        </p>
       </div>
     </div>
   );
