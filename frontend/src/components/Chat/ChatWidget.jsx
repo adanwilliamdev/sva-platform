@@ -2,7 +2,6 @@
 import { MessageCircle, X, Send, Minimize2, Maximize2 } from 'lucide-react';
 import { chatAPI } from '../../services/chat';
 import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
 
 const ChatWidget = () => {
   const { user } = useAuth();
@@ -14,9 +13,8 @@ const ChatWidget = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRecruiter, setIsRecruiter] = useState(false);
-  const [hasNotified, setHasNotified] = useState(false);
-  const [lastMessageCount, setLastMessageCount] = useState(0);
   const messagesEndRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -31,15 +29,25 @@ const ChatWidget = () => {
   }, [isOpen, user]);
 
   useEffect(() => {
-    if (selectedConversation) {
+    if (selectedConversation && isOpen) {
       loadMessages(selectedConversation.id);
-      // Polling mais lento (10 segundos)
-      const interval = setInterval(() => {
-        checkNewMessages(selectedConversation.id);
-      }, 10000);
-      return () => clearInterval(interval);
+      // Polling apenas quando o chat está ABERTO
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+      pollingIntervalRef.current = setInterval(() => {
+        if (isOpen) {
+          refreshMessages(selectedConversation.id);
+        }
+      }, 15000);
+      
+      return () => {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+        }
+      };
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, isOpen]);
 
   useEffect(() => {
     scrollToBottom();
@@ -68,9 +76,7 @@ const ChatWidget = () => {
     setLoading(true);
     try {
       const response = await chatAPI.getMessages(conversationId);
-      const msgs = response.data || [];
-      setMessages(msgs);
-      setLastMessageCount(msgs.length);
+      setMessages(response.data || []);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
       setMessages([]);
@@ -79,29 +85,19 @@ const ChatWidget = () => {
     }
   };
 
-  const checkNewMessages = async (conversationId) => {
+  // SEM NOTIFICAÇÕES - apenas atualiza as mensagens silenciosamente
+  const refreshMessages = async (conversationId) => {
     try {
       const response = await chatAPI.getMessages(conversationId);
-      const msgs = response.data || [];
+      const newMessages = response.data || [];
       
-      if (msgs.length > lastMessageCount && msgs.length > messages.length) {
-        const newMsgs = msgs.slice(messages.length);
-        const lastMsg = newMsgs[newMsgs.length - 1];
-        
-        // Só notificar se a mensagem NÃO foi enviada por mim
-        if (lastMsg && lastMsg.sender_id !== user?.id && !hasNotified) {
-          toast.info('💬 Nova mensagem recebida!');
-          setHasNotified(true);
-          setTimeout(() => setHasNotified(false), 5000);
-        }
-        
-        setMessages(msgs);
-        setLastMessageCount(msgs.length);
+      if (newMessages.length > messages.length) {
+        setMessages(newMessages);
         scrollToBottom();
         loadConversations();
       }
     } catch (error) {
-      console.error('Erro ao verificar novas mensagens:', error);
+      console.error('Erro ao atualizar mensagens:', error);
     }
   };
 
@@ -122,7 +118,6 @@ const ChatWidget = () => {
     };
     
     setMessages(prev => [...prev, tempMessage]);
-    setLastMessageCount(prev => prev + 1);
     scrollToBottom();
     
     try {
@@ -133,9 +128,7 @@ const ChatWidget = () => {
       }, 500);
     } catch (error) {
       console.error('❌ Erro ao enviar mensagem:', error);
-      toast.error('Erro ao enviar mensagem');
       setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
-      setLastMessageCount(prev => prev - 1);
       setNewMessage(messageText);
     }
   };
@@ -171,7 +164,6 @@ const ChatWidget = () => {
 
   return (
     <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
-      {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-teal-600 px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-white" />
@@ -194,7 +186,6 @@ const ChatWidget = () => {
 
       {!isMinimized && (
         <>
-          {/* Lista de Conversas */}
           <div className="border-b border-slate-200 max-h-48 overflow-y-auto">
             {conversations.length > 0 ? (
               conversations.map((conv) => (
@@ -233,7 +224,6 @@ const ChatWidget = () => {
             )}
           </div>
 
-          {/* Mensagens */}
           {selectedConversation && (
             <>
               <div className="h-80 overflow-y-auto p-4 bg-slate-50">
@@ -270,7 +260,6 @@ const ChatWidget = () => {
                 )}
               </div>
 
-              {/* Input */}
               <div className="p-3 border-t border-slate-200 flex gap-2 bg-white">
                 <textarea
                   value={newMessage}
