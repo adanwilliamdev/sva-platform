@@ -2,40 +2,44 @@
 
 # 🚀 SVA Platform
 
-### Plataforma inteligente de recrutamento e seleção
+### Plataforma Inteligente de Recrutamento com IA
 
-Sistema Full Stack desenvolvido com **FastAPI**, **React** e **Inteligência Artificial** para conectar candidatos e recrutadores através de análise de compatibilidade entre perfis e vagas.
+Sistema Full Stack desenvolvido com **FastAPI**, **React** e **Inteligência Artificial** para conectar candidatos e recrutadores através de análise automática de compatibilidade entre currículos e vagas.
 
 ![Python](https://img.shields.io/badge/Python-3.12-blue)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104-green)
-![React](https://img.shields.io/badge/React-18-61dafb)
-![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.3-38bdf8)
+![FastAPI](https://img.shields.io/badge/FastAPI-green)
+![React](https://img.shields.io/badge/React-18-61DAFB)
+![TailwindCSS](https://img.shields.io/badge/TailwindCSS-38BDF8)
+![License](https://img.shields.io/badge/License-MIT-yellow)
 
 </div>
 
 ---
 
-## ✨ Principais Recursos
+## ✨ Funcionalidades
 
-* Dashboard analítico para recrutadores
-* Sistema de vagas e candidaturas
-* Gestão de currículos
-* Ranking automático de candidatos
-* Score de compatibilidade baseado em IA
-* Recomendação de vagas para candidatos
-* Interface moderna e responsiva
+### 👔 Recrutadores
 
----
+* Dashboard analítico com métricas em tempo real
+* Gestão completa de vagas
+* Ranking inteligente de candidatos
+* Visualização de currículos PDF e DOCX
+* Chat direto com candidatos
 
-## 🖼️ Preview
+### 👨‍💼 Candidatos
 
-### Dashboard Recrutador
+* Upload e gerenciamento de currículos
+* Candidatura simplificada
+* Histórico de aplicações
+* Acompanhamento de status
+* Score de compatibilidade com vagas
 
-![Dashboard Recrutador](docs/dashboard-recrutador.png)
+### 🤖 Inteligência Artificial
 
-### Dashboard Candidatos
-
-![Dashboard Candidato](docs/dashboard-candidato.png)
+* Análise de habilidades
+* Similaridade textual utilizando TF-IDF
+* Cálculo automático de compatibilidade
+* Ranking por relevância
 
 ---
 
@@ -43,6 +47,7 @@ Sistema Full Stack desenvolvido com **FastAPI**, **React** e **Inteligência Art
 
 ### Backend
 
+* Python 3.12
 * FastAPI
 * SQLAlchemy
 * SQLite
@@ -55,13 +60,33 @@ Sistema Full Stack desenvolvido com **FastAPI**, **React** e **Inteligência Art
 * TailwindCSS
 * Axios
 * Recharts
+* Lucide React
 
 ---
 
-## 🚀 Executando Localmente
+## 🏗️ Arquitetura
+
+```text
+React
+  ↓
+FastAPI REST API
+  ↓
+SQLAlchemy
+  ↓
+SQLite
+  ↓
+Motor de IA (TF-IDF)
+```
+
+---
+
+## 🚀 Instalação
+
+### Clonar o projeto
 
 ```bash
 git clone https://github.com/adanwilliamdev/sva-platform.git
+
 cd sva-platform
 ```
 
@@ -71,6 +96,7 @@ cd sva-platform
 cd backend
 
 python -m venv venv
+
 venv\Scripts\activate
 
 pip install -r requirements.txt
@@ -84,32 +110,32 @@ uvicorn app.main:app --reload
 cd frontend
 
 npm install
+
 npm start
 ```
 
 ---
 
-## 🎯 Objetivo
+## 📈 Destaques Técnicos
 
-O SVA Platform foi criado para demonstrar competências em:
-
-* Desenvolvimento Full Stack
-* Arquitetura de APIs REST
-* Integração Frontend + Backend
+* API REST com FastAPI
 * Autenticação JWT
-* Banco de Dados Relacional
-* Inteligência Artificial aplicada ao recrutamento
-* Visualização de dados
+* Upload de arquivos PDF e DOCX
+* Dashboard com gráficos interativos
+* Sistema de chat
+* Matching inteligente entre candidatos e vagas
+* Arquitetura Full Stack desacoplada
 
 ---
 
 ## 🗺️ Roadmap
 
-* Upload de currículos PDF
-* Notificações por e-mail
-* Integração com LinkedIn
-* Modo escuro
-* Aplicativo mobile
+* [ ] Integração com LinkedIn
+* [ ] Notificações por e-mail
+* [ ] PostgreSQL
+* [ ] Docker
+* [ ] Aplicativo Mobile
+* [ ] Testes Automatizados
 
 ---
 
@@ -123,6 +149,6 @@ GitHub: @adanwilliamdev
 
 <div align="center">
 
-⭐ Se gostou do projeto, considere deixar uma estrela.
+⭐ Se este projeto foi útil ou interessante para você, considere deixar uma estrela no repositório.
 
 </div>
