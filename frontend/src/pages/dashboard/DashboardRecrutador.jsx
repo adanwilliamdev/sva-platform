@@ -71,7 +71,6 @@ const DashboardRecrutador = () => {
     }
   };
 
-  // Dados do gráfico de tendência (últimos 7 dias)
   const trendData = () => {
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
@@ -88,15 +87,14 @@ const DashboardRecrutador = () => {
     return last7Days;
   };
 
-  // Dados do gráfico de status
+  // Filtrar status com valor > 0
   const statusData = [
     { name: 'Aprovados', value: stats.acceptedCount },
     { name: 'Em Análise', value: stats.reviewedCount },
     { name: 'Pendentes', value: stats.pendingCount },
     { name: 'Recusados', value: stats.rejectedCount }
-  ];
+  ].filter(item => item.value > 0);
 
-  // Ranking de vagas - TOP 3
   const jobRanking = jobs.map(job => ({
     name: job.title,
     value: applications.filter(a => a.job_id === job.id).length,
@@ -184,7 +182,7 @@ const DashboardRecrutador = () => {
 
       {/* Gráficos */}
       <div className="grid lg:grid-cols-2 gap-6 mb-6">
-        {/* Área Chart - Candidaturas por Período */}
+        {/* Área Chart */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <BarChart3 className="w-5 h-5 text-blue-600" />
@@ -207,43 +205,59 @@ const DashboardRecrutador = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Pie Chart - Distribuição de Status */}
+        {/* Pie Chart - Distribuição de Status (SEM LEGEND) */}
         <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
             <PieChartIcon className="w-5 h-5 text-teal-600" />
             <h3 className="font-semibold text-slate-900">🎯 Distribuição de Status</h3>
           </div>
-          <ResponsiveContainer width="100%" height={280}>
-            <PieChart>
-              <Pie
-                data={statusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={80}
-                paddingAngle={4}
-                dataKey="value"
-                label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-              >
-                {statusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          {statusData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={280}>
+                <PieChart>
+                  <Pie
+                    data={statusData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={4}
+                    dataKey="value"
+                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Legenda manual abaixo do gráfico */}
+              <div className="flex justify-center gap-6 mt-4 flex-wrap">
+                {statusData.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                    <span className="text-sm text-slate-700">{item.name}: {item.value}</span>
+                  </div>
                 ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-center h-[280px] text-slate-500">
+              Nenhuma candidatura com status definido
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Ranking das Vagas - TOP 3 */}
+      {/* Ranking TOP 3 */}
       <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm mb-6">
         <div className="flex items-center gap-2 mb-4">
           <Award className="w-5 h-5 text-yellow-500" />
           <h3 className="font-semibold text-slate-900">🏆 Top 3 Vagas</h3>
         </div>
         <div className="space-y-3">
-          {jobRanking.slice(0, 3).map((job, idx) => (
+          {jobRanking.map((job, idx) => (
             <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `${idx + 1}º`}</span>
