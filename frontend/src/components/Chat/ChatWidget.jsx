@@ -14,7 +14,8 @@ const ChatWidget = () => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRecruiter, setIsRecruiter] = useState(false);
-  const [lastMessageId, setLastMessageId] = useState(0);
+  const [hasNotified, setHasNotified] = useState(false);
+  const [lastMessageCount, setLastMessageCount] = useState(0);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -32,10 +33,10 @@ const ChatWidget = () => {
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation.id);
-      // Iniciar polling para esta conversa
+      // Polling mais lento (10 segundos)
       const interval = setInterval(() => {
         checkNewMessages(selectedConversation.id);
-      }, 3000);
+      }, 10000);
       return () => clearInterval(interval);
     }
   }, [selectedConversation]);
@@ -53,7 +54,6 @@ const ChatWidget = () => {
   const loadConversations = async () => {
     try {
       const response = await chatAPI.getConversations();
-      console.log('📥 Conversas carregadas:', response.data);
       setConversations(response.data || []);
       if (response.data && response.data.length > 0 && !selectedConversation) {
         setSelectedConversation(response.data[0]);
@@ -68,12 +68,9 @@ const ChatWidget = () => {
     setLoading(true);
     try {
       const response = await chatAPI.getMessages(conversationId);
-      console.log('📥 Mensagens carregadas:', response.data);
       const msgs = response.data || [];
       setMessages(msgs);
-      if (msgs.length > 0) {
-        setLastMessageId(msgs[msgs.length - 1].id);
-      }
+      setLastMessageCount(msgs.length);
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
       setMessages([]);
@@ -87,23 +84,21 @@ const ChatWidget = () => {
       const response = await chatAPI.getMessages(conversationId);
       const msgs = response.data || [];
       
-      if (msgs.length > messages.length) {
-        // Tem mensagens novas
+      if (msgs.length > lastMessageCount && msgs.length > messages.length) {
         const newMsgs = msgs.slice(messages.length);
-        console.log('📨 Novas mensagens detectadas:', newMsgs);
-        
-        // Verificar se a última mensagem não foi enviada por mim
         const lastMsg = newMsgs[newMsgs.length - 1];
-        if (lastMsg && lastMsg.sender_id !== user?.id) {
+        
+        // Só notificar se a mensagem NÃO foi enviada por mim
+        if (lastMsg && lastMsg.sender_id !== user?.id && !hasNotified) {
           toast.info('💬 Nova mensagem recebida!');
+          setHasNotified(true);
+          setTimeout(() => setHasNotified(false), 5000);
         }
         
         setMessages(msgs);
-        if (msgs.length > 0) {
-          setLastMessageId(msgs[msgs.length - 1].id);
-        }
+        setLastMessageCount(msgs.length);
         scrollToBottom();
-        loadConversations(); // Atualizar lista de conversas
+        loadConversations();
       }
     } catch (error) {
       console.error('Erro ao verificar novas mensagens:', error);
@@ -114,11 +109,10 @@ const ChatWidget = () => {
     if (!newMessage.trim() || !selectedConversation) return;
     
     const messageText = newMessage;
-    const tempId = Date.now();
+    setNewMessage('');
     
-    // Adicionar mensagem localmente (otimista)
     const tempMessage = {
-      id: tempId,
+      id: Date.now(),
       conversation_id: selectedConversation.id,
       sender_id: user?.id,
       sender_name: user?.full_name,
@@ -128,30 +122,20 @@ const ChatWidget = () => {
     };
     
     setMessages(prev => [...prev, tempMessage]);
-    setNewMessage('');
+    setLastMessageCount(prev => prev + 1);
     scrollToBottom();
     
     try {
-      console.log('📤 Enviando mensagem:', {
-        conversation_id: selectedConversation.id,
-        message: messageText,
-        sender_id: user?.id,
-        sender_name: user?.full_name
-      });
-      
       await chatAPI.sendMessage(selectedConversation.id, messageText);
-      
-      // Recarregar mensagens para pegar o ID real
       setTimeout(async () => {
         await loadMessages(selectedConversation.id);
         loadConversations();
       }, 500);
-      
     } catch (error) {
       console.error('❌ Erro ao enviar mensagem:', error);
       toast.error('Erro ao enviar mensagem');
-      // Remover mensagem temporária
-      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setMessages(prev => prev.filter(m => m.id !== tempMessage.id));
+      setLastMessageCount(prev => prev - 1);
       setNewMessage(messageText);
     }
   };
