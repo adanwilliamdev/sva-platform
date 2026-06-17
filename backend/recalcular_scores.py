@@ -6,9 +6,8 @@ from app.services.ai_matcher import AIMatcher
 
 db = SessionLocal()
 
-# Buscar todas as candidaturas
 applications = db.query(Application).all()
-print(f'Atualizando {len(applications)} candidaturas...\n')
+print(f'Recalculando {len(applications)} candidaturas...\n')
 
 for app in applications:
     resume = db.query(Resume).filter(Resume.id == app.resume_id).first()
@@ -29,18 +28,16 @@ for app in applications:
             'requirements': job.requirements
         }
         
-        # Calcular novo score
         new_score, match_result = AIMatcher.calculate_compatibility(resume_data, job_data)
         
         old_score = app.compatibility_score
+        app.compatibility_score = new_score
+        
         print(f'Vaga: {job.title}')
         print(f'  Score antigo: {old_score}% -> Novo score: {new_score}%')
+        print(f'  Match de habilidades: {match_result["breakdown"]["skill_match"]}%')
         print(f'  Feedback: {match_result["feedback"]}\n')
-        
-        # Atualizar
-        app.compatibility_score = new_score
 
-# Salvar todas as alterações
 db.commit()
-print('✅ Todas as candidaturas foram atualizadas com sucesso!')
+print('✅ Scores atualizados!')
 db.close()

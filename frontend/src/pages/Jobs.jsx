@@ -3,17 +3,16 @@ import { Link } from 'react-router-dom';
 import { jobsAPI } from '../services/jobs';
 import { applicationsAPI } from '../services/applications';
 import { resumesAPI } from '../services/resumes';
-import { chatAPI } from '../services/chat';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { Briefcase, MapPin, DollarSign, Building, Send, Search, MessageCircle } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Building, Send, Search } from 'lucide-react';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(null);
-  const { isCandidate, user } = useAuth();
+  const { isCandidate } = useAuth();
 
   useEffect(() => {
     fetchJobs();
@@ -50,23 +49,6 @@ const Jobs = () => {
       toast.error(error.response?.data?.detail || 'Erro ao candidatar-se');
     } finally {
       setApplying(false);
-    }
-  };
-
-  const handleStartChat = async (jobId) => {
-    try {
-      const response = await chatAPI.startConversation(jobId);
-      if (response.status === 200 || response.data.conversation_id) {
-        toast.success('💬 Conversa iniciada! Acesse o chat no canto inferior direito.');
-        // Abrir o chat
-        window.dispatchEvent(new CustomEvent('openChat'));
-      }
-    } catch (error) {
-      if (error.response?.status === 403) {
-        toast.info('💬 Entre em contato com o recrutador através do chat');
-      } else {
-        toast.error('Erro ao iniciar chat');
-      }
     }
   };
 
@@ -124,24 +106,19 @@ const Jobs = () => {
                 {isCandidate && (
                   <>
                     {resumes.length > 0 ? (
-                      <>
-                        <select
-                          onChange={(e) => handleApply(job.id, parseInt(e.target.value))}
-                          disabled={applying === job.id}
-                          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700"
-                          defaultValue=""
-                        >
-                          <option value="" disabled>Candidatar-se</option>
-                          {resumes.map(resume => (
-                            <option key={resume.id} value={resume.id}>
-                              📄 {resume.title}
-                            </option>
-                          ))}
-                        </select>
-                        {applying === job.id && (
-                          <div className="text-center text-blue-600 text-sm animate-pulse">Processando...</div>
-                        )}
-                      </>
+                      <select
+                        onChange={(e) => handleApply(job.id, parseInt(e.target.value))}
+                        disabled={applying === job.id}
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700"
+                        defaultValue=""
+                      >
+                        <option value="" disabled>Candidatar-se</option>
+                        {resumes.map(resume => (
+                          <option key={resume.id} value={resume.id}>
+                            📄 {resume.title}
+                          </option>
+                        ))}
+                      </select>
                     ) : (
                       <Link 
                         to="/resume" 
@@ -151,14 +128,7 @@ const Jobs = () => {
                       </Link>
                     )}
                     
-                    {/* Botão Chat para candidato */}
-                    <button
-                      onClick={() => handleStartChat(job.id)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm hover:bg-green-700 transition"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Falar com Recrutador
-                    </button>
+                    {/* Botão "Falar com Recrutador" REMOVIDO - só aparece via chat após candidatura */}
                   </>
                 )}
               </div>
