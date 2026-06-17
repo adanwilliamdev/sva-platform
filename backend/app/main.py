@@ -8,19 +8,13 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="SVA - Sua Vaga Aqui API", version="1.0.0")
 
-# Configuração CORS - Permitir todas as origens em desenvolvimento
+# CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",     # Frontend React
-        "http://127.0.0.1:3000",
-        "http://localhost:8000",
-        "*"  # Permitir todas em desenvolvimento (opcional, mas útil)
-    ],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
-    allow_methods=["*"],  # Permitir todos os métodos (GET, POST, PUT, DELETE, OPTIONS)
-    allow_headers=["*"],  # Permitir todos os headers
-    expose_headers=["*"], # Expor headers para o frontend
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # Include routers
