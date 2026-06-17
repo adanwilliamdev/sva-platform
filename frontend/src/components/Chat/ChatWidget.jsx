@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { MessageCircle, X, Send, Minimize2, Maximize2 } from 'lucide-react';
-import { chatAPI, chatService } from '../../services/chat';
+import { chatAPI } from '../../services/chat';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
@@ -13,33 +13,30 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isRecruiter, setIsRecruiter] = useState(false);
+  const [lastMessageId, setLastMessageId] = useState(0);
   const messagesEndRef = useRef(null);
 
-  // Conectar ao socket quando o usuário estiver logado
   useEffect(() => {
     if (user) {
-      const token = localStorage.getItem('token');
-      chatService.connect(token);
-      
-      chatService.onNewMessage(handleNewMessage);
-      
-      return () => {
-        chatService.removeListener(handleNewMessage);
-        chatService.disconnect();
-      };
+      setIsRecruiter(user.user_type === 'recruiter');
     }
   }, [user]);
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && user) {
       loadConversations();
     }
-  }, [isOpen]);
+  }, [isOpen, user]);
 
   useEffect(() => {
-    if (selectedConversation && user) {
-      chatService.joinConversation(selectedConversation.id, user.id);
+    if (selectedConversation) {
       loadMessages(selectedConversation.id);
+      // Iniciar polling para esta conversa
+      const interval = setInterval(() => {
+        checkNewMessages(selectedConversation.id);
+      }, 3000);
+      return () => clearInterval(interval);
     }
   }, [selectedConversation]);
 
@@ -48,18 +45,22 @@ const ChatWidget = () => {
   }, [messages]);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   const loadConversations = async () => {
     try {
       const response = await chatAPI.getConversations();
-      setConversations(response.data);
-      if (response.data.length > 0 && !selectedConversation) {
+      console.log('📥 Conversas carregadas:', response.data);
+      setConversations(response.data || []);
+      if (response.data && response.data.length > 0 && !selectedConversation) {
         setSelectedConversation(response.data[0]);
       }
     } catch (error) {
       console.error('Erro ao carregar conversas:', error);
+      setConversations([]);
     }
   };
 
@@ -67,44 +68,92 @@ const ChatWidget = () => {
     setLoading(true);
     try {
       const response = await chatAPI.getMessages(conversationId);
-      setMessages(response.data);
+      console.log('📥 Mensagens carregadas:', response.data);
+      const msgs = response.data || [];
+      setMessages(msgs);
+      if (msgs.length > 0) {
+        setLastMessageId(msgs[msgs.length - 1].id);
+      }
     } catch (error) {
       console.error('Erro ao carregar mensagens:', error);
+      setMessages([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleNewMessage = (data) => {
-    if (selectedConversation && data.conversation_id === selectedConversation.id) {
-      setMessages(prev => [...prev, data]);
+  const checkNewMessages = async (conversationId) => {
+    try {
+      const response = await chatAPI.getMessages(conversationId);
+      const msgs = response.data || [];
+      
+      if (msgs.length > messages.length) {
+        // Tem mensagens novas
+        const newMsgs = msgs.slice(messages.length);
+        console.log('📨 Novas mensagens detectadas:', newMsgs);
+        
+        // Verificar se a última mensagem não foi enviada por mim
+        const lastMsg = newMsgs[newMsgs.length - 1];
+        if (lastMsg && lastMsg.sender_id !== user?.id) {
+          toast.info('💬 Nova mensagem recebida!');
+        }
+        
+        setMessages(msgs);
+        if (msgs.length > 0) {
+          setLastMessageId(msgs[msgs.length - 1].id);
+        }
+        scrollToBottom();
+        loadConversations(); // Atualizar lista de conversas
+      }
+    } catch (error) {
+      console.error('Erro ao verificar novas mensagens:', error);
     }
-    loadConversations();
   };
 
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation) return;
     
-    // Enviar via socket
-    chatService.sendMessage(
-      selectedConversation.id,
-      newMessage,
-      user.id
-    );
+    const messageText = newMessage;
+    const tempId = Date.now();
     
     // Adicionar mensagem localmente (otimista)
     const tempMessage = {
-      id: Date.now(),
+      id: tempId,
       conversation_id: selectedConversation.id,
-      sender_id: user.id,
-      sender_name: user.full_name,
-      message: newMessage,
+      sender_id: user?.id,
+      sender_name: user?.full_name,
+      message: messageText,
       created_at: new Date().toISOString(),
       is_read: false
     };
+    
     setMessages(prev => [...prev, tempMessage]);
     setNewMessage('');
-    loadConversations();
+    scrollToBottom();
+    
+    try {
+      console.log('📤 Enviando mensagem:', {
+        conversation_id: selectedConversation.id,
+        message: messageText,
+        sender_id: user?.id,
+        sender_name: user?.full_name
+      });
+      
+      await chatAPI.sendMessage(selectedConversation.id, messageText);
+      
+      // Recarregar mensagens para pegar o ID real
+      setTimeout(async () => {
+        await loadMessages(selectedConversation.id);
+        loadConversations();
+      }, 500);
+      
+    } catch (error) {
+      console.error('❌ Erro ao enviar mensagem:', error);
+      toast.error('Erro ao enviar mensagem');
+      // Remover mensagem temporária
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+      setNewMessage(messageText);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -114,6 +163,12 @@ const ChatWidget = () => {
     }
   };
 
+  const getUnreadCount = () => {
+    return conversations.reduce((acc, c) => acc + (c.unread_count || 0), 0);
+  };
+
+  if (!user) return null;
+
   if (!isOpen) {
     return (
       <button
@@ -121,9 +176,11 @@ const ChatWidget = () => {
         className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 group hover:scale-110"
       >
         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition" />
-        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-          {conversations.filter(c => c.unread_count > 0).length || 0}
-        </span>
+        {getUnreadCount() > 0 && (
+          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center animate-pulse">
+            {getUnreadCount()}
+          </span>
+        )}
       </button>
     );
   }
@@ -155,32 +212,39 @@ const ChatWidget = () => {
         <>
           {/* Lista de Conversas */}
           <div className="border-b border-slate-200 max-h-48 overflow-y-auto">
-            {conversations.map((conv) => (
-              <div
-                key={conv.id}
-                onClick={() => setSelectedConversation(conv)}
-                className={`p-3 cursor-pointer hover:bg-slate-50 transition ${selectedConversation?.id === conv.id ? 'bg-blue-50' : ''}`}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="font-medium text-slate-900 text-sm">
-                      {user?.user_type === 'recruiter' ? conv.candidate_name : conv.job_title}
-                    </p>
-                    <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-                      {conv.last_message || 'Nenhuma mensagem'}
-                    </p>
+            {conversations.length > 0 ? (
+              conversations.map((conv) => (
+                <div
+                  key={conv.id}
+                  onClick={() => setSelectedConversation(conv)}
+                  className={`p-3 cursor-pointer hover:bg-slate-50 transition ${selectedConversation?.id === conv.id ? 'bg-blue-50' : ''}`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <p className="font-medium text-slate-900 text-sm">
+                        {isRecruiter ? conv.candidate_name : conv.job_title}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
+                        {conv.last_message || 'Nenhuma mensagem'}
+                      </p>
+                    </div>
+                    {conv.unread_count > 0 && (
+                      <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                        {conv.unread_count}
+                      </span>
+                    )}
                   </div>
-                  {conv.unread_count > 0 && (
-                    <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {conv.unread_count}
-                    </span>
-                  )}
                 </div>
-              </div>
-            ))}
-            {conversations.length === 0 && (
-              <div className="p-6 text-center text-slate-500 text-sm">
-                Nenhuma conversa ainda
+              ))
+            ) : (
+              <div className="p-6 text-center">
+                <MessageCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500 text-sm">Nenhuma conversa ainda</p>
+                <p className="text-slate-400 text-xs mt-1">
+                  {isRecruiter 
+                    ? 'Clique em "Chat" na página de candidaturas para iniciar uma conversa'
+                    : 'Aguardando contato do recrutador'}
+                </p>
               </div>
             )}
           </div>
@@ -195,25 +259,28 @@ const ChatWidget = () => {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {messages.map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex ${msg.sender_id === user?.id ? 'justify-end' : 'justify-start'}`}
-                      >
+                    {messages.map((msg) => {
+                      const isMine = msg.sender_id === user?.id;
+                      return (
                         <div
-                          className={`max-w-[70%] px-4 py-2.5 rounded-2xl ${
-                            msg.sender_id === user?.id
-                              ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white'
-                              : 'bg-white border border-slate-200 text-slate-900'
-                          }`}
+                          key={msg.id}
+                          className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                         >
-                          <p className="text-sm">{msg.message}</p>
-                          <p className="text-xs opacity-70 mt-1">
-                            {new Date(msg.created_at).toLocaleTimeString()}
-                          </p>
+                          <div
+                            className={`max-w-[70%] px-4 py-2.5 rounded-2xl ${
+                              isMine
+                                ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white'
+                                : 'bg-white border border-slate-200 text-slate-900'
+                            }`}
+                          >
+                            <p className="text-sm break-words">{msg.message}</p>
+                            <p className="text-xs opacity-70 mt-1">
+                              {new Date(msg.created_at).toLocaleTimeString()}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     <div ref={messagesEndRef} />
                   </div>
                 )}

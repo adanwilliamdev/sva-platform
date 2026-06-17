@@ -3,16 +3,17 @@ import { Link } from 'react-router-dom';
 import { jobsAPI } from '../services/jobs';
 import { applicationsAPI } from '../services/applications';
 import { resumesAPI } from '../services/resumes';
+import { chatAPI } from '../services/chat';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
-import { Briefcase, MapPin, DollarSign, Building, Send, Search, Sparkles, Clock } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Building, Send, Search, MessageCircle } from 'lucide-react';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(null);
-  const { isCandidate } = useAuth();
+  const { isCandidate, user } = useAuth();
 
   useEffect(() => {
     fetchJobs();
@@ -52,6 +53,23 @@ const Jobs = () => {
     }
   };
 
+  const handleStartChat = async (jobId) => {
+    try {
+      const response = await chatAPI.startConversation(jobId);
+      if (response.status === 200 || response.data.conversation_id) {
+        toast.success('💬 Conversa iniciada! Acesse o chat no canto inferior direito.');
+        // Abrir o chat
+        window.dispatchEvent(new CustomEvent('openChat'));
+      }
+    } catch (error) {
+      if (error.response?.status === 403) {
+        toast.info('💬 Entre em contato com o recrutador através do chat');
+      } else {
+        toast.error('Erro ao iniciar chat');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -71,7 +89,6 @@ const Jobs = () => {
         {jobs.map(job => (
           <div key={job.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition">
             <div className="flex flex-col lg:flex-row justify-between gap-4">
-              {/* Lado esquerdo - informações da vaga */}
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-2">
                   <h2 className="text-xl font-bold text-slate-900">{job.title}</h2>
@@ -96,11 +113,6 @@ const Jobs = () => {
                       <DollarSign className="w-4 h-4" /> {job.salary_range}
                     </span>
                   )}
-                  {job.created_at && (
-                    <span className="flex items-center gap-1 text-slate-400">
-                      <Clock className="w-4 h-4" /> {new Date(job.created_at).toLocaleDateString('pt-BR')}
-                    </span>
-                  )}
                 </div>
                 
                 <p className="text-slate-600 text-sm leading-relaxed line-clamp-2">
@@ -108,38 +120,48 @@ const Jobs = () => {
                 </p>
               </div>
 
-              {/* Lado direito - botão de candidatura */}
-              {isCandidate && (
-                <div className="lg:w-48 flex flex-col gap-2 justify-center">
-                  {resumes.length > 0 ? (
-                    <>
-                      <select
-                        onChange={(e) => handleApply(job.id, parseInt(e.target.value))}
-                        disabled={applying === job.id}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700"
-                        defaultValue=""
+              <div className="flex flex-col gap-2 min-w-[140px]">
+                {isCandidate && (
+                  <>
+                    {resumes.length > 0 ? (
+                      <>
+                        <select
+                          onChange={(e) => handleApply(job.id, parseInt(e.target.value))}
+                          disabled={applying === job.id}
+                          className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700"
+                          defaultValue=""
+                        >
+                          <option value="" disabled>Candidatar-se</option>
+                          {resumes.map(resume => (
+                            <option key={resume.id} value={resume.id}>
+                              📄 {resume.title}
+                            </option>
+                          ))}
+                        </select>
+                        {applying === job.id && (
+                          <div className="text-center text-blue-600 text-sm animate-pulse">Processando...</div>
+                        )}
+                      </>
+                    ) : (
+                      <Link 
+                        to="/resume" 
+                        className="w-full text-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200 transition"
                       >
-                        <option value="" disabled>Candidatar-se</option>
-                        {resumes.map(resume => (
-                          <option key={resume.id} value={resume.id}>
-                            📄 {resume.title}
-                          </option>
-                        ))}
-                      </select>
-                      {applying === job.id && (
-                        <div className="text-center text-blue-600 text-sm animate-pulse">Processando...</div>
-                      )}
-                    </>
-                  ) : (
-                    <Link 
-                      to="/resume" 
-                      className="w-full text-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200 transition"
+                        📄 Cadastrar Currículo
+                      </Link>
+                    )}
+                    
+                    {/* Botão Chat para candidato */}
+                    <button
+                      onClick={() => handleStartChat(job.id)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl text-sm hover:bg-green-700 transition"
                     >
-                      📄 Cadastrar Currículo
-                    </Link>
-                  )}
-                </div>
-              )}
+                      <MessageCircle className="w-4 h-4" />
+                      Falar com Recrutador
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         ))}

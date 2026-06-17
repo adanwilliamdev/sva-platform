@@ -22,24 +22,24 @@ def start_conversation(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     
-    # Verificar se o usuário é candidato OU recrutador da vaga
-    if current_user.user_type == "candidate":
-        candidate_id = current_user.id
-        recruiter_id = job.recruiter_id
-    elif current_user.user_type == "recruiter" and current_user.id == job.recruiter_id:
-        # Recrutador pode iniciar conversa com candidato
-        # Precisa do candidate_id - vamos buscar da aplicação
-        application = db.query(Application).filter(
-            Application.job_id == job_id
-        ).first()
-        
-        if not application:
-            raise HTTPException(status_code=404, detail="No candidate found for this job")
-        
-        candidate_id = application.candidate_id
-        recruiter_id = current_user.id
-    else:
-        raise HTTPException(status_code=403, detail="Not authorized to start conversation")
+    # Verificar se é recrutador
+    if current_user.user_type != "recruiter":
+        raise HTTPException(status_code=403, detail="Only recruiters can start conversations")
+    
+    # Verificar se o recrutador é o dono da vaga
+    if current_user.id != job.recruiter_id:
+        raise HTTPException(status_code=403, detail="You are not the owner of this job")
+    
+    # Buscar o candidato que se candidatou à vaga
+    application = db.query(Application).filter(
+        Application.job_id == job_id
+    ).first()
+    
+    if not application:
+        raise HTTPException(status_code=404, detail="No candidate found for this job")
+    
+    candidate_id = application.candidate_id
+    recruiter_id = current_user.id
     
     # Verificar se já existe conversa
     existing = db.query(Conversation).filter(

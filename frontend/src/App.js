@@ -13,6 +13,7 @@ import Jobs from './pages/Jobs';
 import PostJob from './pages/PostJob';
 import Resume from './pages/Resume';
 import Applications from './pages/Applications';
+import ChatWidget from './components/Chat/ChatWidget';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="/resume" element={<PrivateRoute><Resume /></PrivateRoute>} />
             <Route path="/applications" element={<PrivateRoute><Applications /></PrivateRoute>} />
           </Routes>
+          <ChatWidget />
         </div>
       </Router>
     </AuthProvider>
