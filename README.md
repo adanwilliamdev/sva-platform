@@ -302,7 +302,7 @@ contém exatamente a URL do frontend.
 
 ### Adan William
 
-💼 Analista de TI | NOC | Desenvolvedor Python Full Stack
+💼 Analista de TI | NOC | Desenvolvedor Full Stack
 
 * GitHub: https://github.com/adanwilliamdev
 * LinkedIn: Adan William
