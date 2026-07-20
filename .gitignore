@@ -49,6 +49,10 @@ backend/venv/
 backend/.pytest_cache/
 backend/.coverage
 
+# Uploads de usuário (dados de runtime, não versionar)
+backend/uploads/resumes/*
+!backend/uploads/resumes/.gitkeep
+
 # Arquivos temporários
 *.tmp
 *.temp

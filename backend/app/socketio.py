@@ -1,4 +1,5 @@
-﻿from fastapi import FastAPI
+﻿import os
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import socketio
 from app.database import SessionLocal
@@ -6,8 +7,10 @@ from app.models.chat import Message, Conversation
 from app.models.user import User
 
 # Criar servidor Socket.IO
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+
 sio = socketio.AsyncServer(
-    cors_allowed_origins=['http://localhost:3000'],
+    cors_allowed_origins=ALLOWED_ORIGINS,
     async_mode='asgi'
 )
 socket_app = socketio.ASGIApp(sio)

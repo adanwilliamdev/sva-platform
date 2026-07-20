@@ -2,20 +2,17 @@
 
 # 🚀 SVA Platform
 
-### Plataforma Inteligente de Recrutamento com Inteligência Artificial
+### Plataforma Inteligente de Recrutamento
 
-Sistema Full Stack desenvolvido com **FastAPI**, **React** e **Machine Learning** para conectar candidatos e recrutadores através de análise automática de compatibilidade entre currículos e vagas.
+Sistema Full Stack desenvolvido com **FastAPI** e **React** para conectar candidatos e recrutadores, com matching automático de compatibilidade entre currículos e vagas.
 
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.12-blue" />
   <img src="https://img.shields.io/badge/FastAPI-009688" />
   <img src="https://img.shields.io/badge/React-61DAFB" />
   <img src="https://img.shields.io/badge/TailwindCSS-38BDF8" />
-  <img src="https://img.shields.io/badge/Render-Deployed-success" />
   <img src="https://img.shields.io/badge/License-MIT-yellow" />
 </p>
-
-**Matching inteligente entre talentos e oportunidades utilizando IA**
 
 </div>
 
@@ -23,21 +20,17 @@ Sistema Full Stack desenvolvido com **FastAPI**, **React** e **Machine Learning*
 
 ## 📌 Sobre o Projeto
 
-O **SVA Platform** é uma plataforma moderna de recrutamento e seleção que utiliza técnicas de **Processamento de Linguagem Natural (NLP)** para analisar currículos e vagas, gerando automaticamente um índice de compatibilidade entre candidatos e oportunidades.
+O **SVA Platform** é uma plataforma de recrutamento e seleção que analisa o texto de currículos e vagas para gerar automaticamente um índice de compatibilidade entre candidatos e oportunidades.
 
-A aplicação foi construída seguindo uma arquitetura Full Stack desacoplada, proporcionando escalabilidade, manutenção simplificada e facilidade de evolução.
+A aplicação segue uma arquitetura Full Stack desacoplada: API REST em FastAPI + banco SQLite local (sem dependências externas) e frontend em React.
+
+### 🖥️ Projeto configurado para rodar 100% localmente
 
 ---
 
-## 🌐 Demonstração Online
+## 🔑 Credenciais de Demonstração
 
-### Aplicação
-
-* 🔗 **Frontend:** https://sva-platform-frontend.onrender.com
-* 🔗 **Backend API:** https://sva-platform-api.onrender.com
-* 🔗 **Swagger Docs:** https://sva-platform-api.onrender.com/docs
-
-### Credenciais de Teste
+Criadas automaticamente ao subir o backend pela primeira vez (`RUN_SEED=true`):
 
 | Perfil          | Usuário    | Senha  |
 | --------------- | ---------- | ------ |
@@ -52,9 +45,9 @@ A aplicação foi construída seguindo uma arquitetura Full Stack desacoplada, p
 
 * Dashboard com métricas e indicadores
 * Gestão completa de vagas (CRUD)
-* Ranking inteligente de candidatos
+* Ranking de candidatos por compatibilidade
 * Visualização de currículos PDF e DOCX
-* Comunicação via chat com candidatos
+* Chat em tempo real com candidatos
 * Acompanhamento do processo seletivo
 
 ### 👨‍💼 Área do Candidato
@@ -65,13 +58,11 @@ A aplicação foi construída seguindo uma arquitetura Full Stack desacoplada, p
 * Acompanhamento de status
 * Score de compatibilidade com vagas
 
-### 🤖 Inteligência Artificial
+### 🤖 Matching Automático
 
-* Extração de habilidades
-* Similaridade textual utilizando TF-IDF
-* Matching automático entre vagas e currículos
-* Ranking de candidatos por relevância
-* Análise de aderência ao perfil da vaga
+* Extração de palavras-chave do currículo e da vaga (com stopwords em português)
+* Cálculo de aderência por sobreposição de termos relevantes
+* Ranking de candidatos por relevância para cada vaga
 
 ---
 
@@ -79,30 +70,26 @@ A aplicação foi construída seguindo uma arquitetura Full Stack desacoplada, p
 
 ```text
 ┌─────────────────────┐
-│     React 18        │
-│   Frontend SPA      │
+│      React SPA      │
+│      Frontend       │
 └──────────┬──────────┘
-           │ REST API
+           │ REST API + WebSocket (chat)
            ▼
 ┌─────────────────────┐
-│      FastAPI        │
-│ Authentication JWT  │
-└──────────┬──────────┘
-           │
-           ▼
-┌─────────────────────┐
-│    SQLAlchemy ORM   │
+│      FastAPI         │
+│ Auth JWT + Socket.IO │
 └──────────┬──────────┘
            │
            ▼
 ┌─────────────────────┐
-│ SQLite/PostgreSQL   │
+│    SQLAlchemy ORM    │
 └──────────┬──────────┘
            │
            ▼
 ┌─────────────────────┐
-│ IA - Scikit Learn   │
-│ TF-IDF Matching     │
+│  SQLite (arquivo     │
+│  local, sem serviço  │
+│  externo)             │
 └─────────────────────┘
 ```
 
@@ -114,42 +101,58 @@ A aplicação foi construída seguindo uma arquitetura Full Stack desacoplada, p
 
 * Python 3.12
 * FastAPI
-* SQLAlchemy
-* SQLite
-* PostgreSQL
-* JWT Authentication
-* Scikit-Learn
+* SQLAlchemy + SQLite
+* JWT Authentication (python-jose + passlib)
+* Socket.IO (chat em tempo real)
 * Pydantic Settings
 
 ### Frontend
 
-* React 18
+* React 19
 * Tailwind CSS
 * Axios
 * Recharts
-* React Hook Form
+* Socket.IO Client
 * Lucide React
 
-### DevOps
+### Infraestrutura
 
-* GitHub
-* Render
-* Environment Variables
-* Continuous Deployment
+* Docker / Docker Compose (local)
 
 ---
 
-## 🚀 Instalação Local
+## 🚀 Rodando Localmente
 
-### 1. Clone o Repositório
+### Pré-requisitos
+
+* [Docker Desktop](https://www.docker.com/products/docker-desktop/) (para a Opção 1)
+* Ou, para rodar sem Docker: Python 3.12+ e Node.js 20+
+
+### Opção 1 — Docker Compose (recomendado, sobe tudo com 1 comando)
+
+Não precisa de PostgreSQL nem de nenhum serviço externo — o banco é um arquivo SQLite local, criado e populado automaticamente na primeira inicialização.
 
 ```bash
-git clone https://github.com/adanwilliamdev/sva-platform.git
-
-cd sva-platform
+docker compose up --build
 ```
 
-### 2. Backend
+Acesse:
+
+* **Frontend:** http://localhost:3000
+* **Backend API:** http://localhost:8000
+* **Swagger Docs:** http://localhost:8000/docs
+
+Para parar:
+
+```bash
+docker compose down
+```
+
+> Como o código é copiado para dentro da imagem (não montado como volume), alterações no código exigem rodar `docker compose up --build` novamente. Para desenvolvimento ativo com hot-reload, prefira a Opção 2.
+
+### Opção 2 — Rodando manualmente (sem Docker, com hot-reload)
+
+#### Backend
 
 ```bash
 cd backend
@@ -164,18 +167,15 @@ source venv/bin/activate
 
 pip install -r requirements.txt
 
+cp .env.example .env
+# edite o .env se quiser trocar a SECRET_KEY
+
 uvicorn app.main:app --reload
 ```
 
-Servidor disponível em:
+Backend disponível em `http://localhost:8000`.
 
-```text
-http://localhost:8000
-```
-
----
-
-### 3. Frontend
+#### Frontend
 
 ```bash
 cd frontend
@@ -185,116 +185,33 @@ npm install
 npm start
 ```
 
-Aplicação disponível em:
-
-```text
-http://localhost:3000
-```
-
----
-
-## 📦 Deploy no Render
-
-### Backend
-
-```text
-Environment: Python 3
-Build Command:
-pip install -r backend/requirements.txt
-
-Start Command:
-cd backend && uvicorn app.main:app --host 0.0.0.0 --port $PORT
-```
-
-### Variáveis de Ambiente
-
-```env
-PYTHON_VERSION=3.12.8
-ALLOWED_ORIGINS=https://seu-frontend.onrender.com
-DATABASE_URL=sqlite:///sva_platform.db
-RUN_SEED=true
-SECRET_KEY=sua_chave_jwt
-```
-
----
-
-### Frontend
-
-```text
-Build Command:
-cd frontend && npm install && npm run build
-
-Publish Directory:
-frontend/build
-```
-
-```env
-REACT_APP_API_URL=https://sva-platform-api.onrender.com
-```
-
----
-
-## 📈 Diferenciais Técnicos
-
-✔ Arquitetura Full Stack desacoplada
-
-✔ API REST documentada automaticamente (Swagger)
-
-✔ Autenticação JWT
-
-✔ Upload de arquivos PDF e DOCX
-
-✔ Dashboard analítico com gráficos interativos
-
-✔ Sistema de chat integrado
-
-✔ Matching inteligente utilizando NLP
-
-✔ Deploy contínuo via Render
-
-✔ Estrutura preparada para PostgreSQL
-
----
-
-## 🗺️ Roadmap
-
-* [x] Deploy na nuvem
-* [x] Seed automático do banco
-* [x] Autenticação JWT
-* [x] Sistema de Matching IA (TF-IDF)
-* [ ] Integração com LinkedIn
-* [ ] Notificações por e-mail
-* [ ] PostgreSQL em produção
-* [ ] Docker
-* [ ] React Native App
-* [ ] Testes automatizados
-* [ ] CI/CD com GitHub Actions
+Frontend disponível em `http://localhost:3000` (já aponta para `http://localhost:8000` por padrão).
 
 ---
 
 ## 🐛 Problemas Comuns
 
-### pydantic_settings não encontrado
+| Sintoma | Causa provável | Solução |
+| --- | --- | --- |
+| `ModuleNotFoundError: pydantic_settings` | Dependência não instalada | `pip install pydantic-settings==2.7.0` |
+| `password cannot be longer than 72 bytes` | Versão incompatível do bcrypt | `pip install bcrypt==4.0.1` |
+| Erro de CORS no navegador | `ALLOWED_ORIGINS` não inclui a URL do frontend | Confirme que `ALLOWED_ORIGINS` no `.env`/docker-compose contém exatamente `http://localhost:3000` |
+| Chat não atualiza em tempo real | Backend antigo sem Socket.IO montado | Já corrigido nesta versão — confirme que está usando `app/main.py` atualizado |
 
-```bash
-pip install pydantic-settings==2.7.0
-```
+---
 
-### password cannot be longer than 72 bytes
+## 🗺️ Roadmap
 
-```bash
-pip install bcrypt==4.0.1
-```
-
-### Erro de CORS
-
-Verifique se a variável:
-
-```env
-ALLOWED_ORIGINS
-```
-
-contém exatamente a URL do frontend.
+* [x] Seed automático do banco
+* [x] Autenticação JWT
+* [x] Chat em tempo real (Socket.IO)
+* [x] Matching automático por palavras-chave
+* [ ] Integração com LinkedIn
+* [ ] Notificações por e-mail
+* [ ] PostgreSQL como opção de banco
+* [ ] React Native App
+* [ ] Testes automatizados
+* [ ] CI/CD com GitHub Actions
 
 ---
 
@@ -305,15 +222,12 @@ contém exatamente a URL do frontend.
 💼 Analista de TI | NOC | Desenvolvedor Full Stack
 
 * GitHub: https://github.com/adanwilliamdev
-* LinkedIn: Adan William
 
 ---
 
 ## 📄 Licença
 
-Distribuído sob a licença MIT.
-
-Consulte o arquivo **LICENSE** para mais informações.
+Distribuído sob a licença MIT. Consulte o arquivo **LICENSE** para mais informações.
 
 ---
 

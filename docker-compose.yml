@@ -1,0 +1,29 @@
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: sva-backend
+    environment:
+      SECRET_KEY: troque_por_um_segredo_forte_e_unico
+      ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      RUN_SEED: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - backend_db:/app/data
+      - backend_uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: sva-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  backend_db:
+  backend_uploads:
