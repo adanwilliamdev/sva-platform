@@ -63,13 +63,13 @@ const Jobs = () => {
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-slate-900">Vagas Disponíveis</h1>
+        <h1 className="font-display text-3xl font-normal text-slate-900">Vagas Disponíveis</h1>
         <p className="text-slate-500 text-sm">Encontre a oportunidade perfeita para você</p>
       </div>
 
       <div className="space-y-4">
         {jobs.map(job => (
-          <div key={job.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition">
+          <div key={job.id} className="bg-[#16141B] rounded border border-slate-200 p-6 hover:shadow-lg transition">
             <div className="flex flex-col lg:flex-row justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-2">
@@ -109,7 +109,7 @@ const Jobs = () => {
                       <select
                         onChange={(e) => handleApply(job.id, parseInt(e.target.value))}
                         disabled={applying === job.id}
-                        className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-slate-700"
+                        className="w-full px-4 py-2.5 border border-slate-200 rounded text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-[#16141B] text-slate-700"
                         defaultValue=""
                       >
                         <option value="" disabled>Candidatar-se</option>
@@ -122,7 +122,7 @@ const Jobs = () => {
                     ) : (
                       <Link 
                         to="/resume" 
-                        className="w-full text-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200 transition"
+                        className="w-full text-center px-4 py-2.5 bg-slate-100 text-slate-600 rounded text-sm hover:bg-slate-200 transition"
                       >
                         📄 Cadastrar Currículo
                       </Link>
@@ -137,7 +137,7 @@ const Jobs = () => {
         ))}
 
         {jobs.length === 0 && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <div className="bg-[#16141B] rounded border border-slate-200 p-12 text-center">
             <Briefcase className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <p className="text-slate-500 text-lg">Nenhuma vaga disponível</p>
             <p className="text-slate-400 text-sm">Volte em breve para novas oportunidades!</p>

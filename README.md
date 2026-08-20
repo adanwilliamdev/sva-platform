@@ -61,8 +61,19 @@ Criadas automaticamente ao subir o backend pela primeira vez (`RUN_SEED=true`):
 ### 🤖 Matching Automático
 
 * Extração de palavras-chave do currículo e da vaga (com stopwords em português)
-* Cálculo de aderência por sobreposição de termos relevantes
+* Similaridade textual por **TF-IDF + similaridade de cosseno** (scikit-learn), que pondera termos raros/relevantes em vez de tratar todas as palavras com o mesmo peso
+* Correspondência de habilidades com **matching difuso** (reconhece variações como "Spring" ~ "Spring Boot")
 * Ranking de candidatos por relevância para cada vaga
+
+### 📅 Entrevistas
+
+* Recrutador agenda entrevista diretamente a partir de uma candidatura (data/hora, local ou link de videochamada, observações)
+* Candidato vê suas próximas entrevistas no dashboard
+* Notificação por e-mail automática ao agendar (ou mudar status de candidatura)
+
+### 📊 Analytics
+
+* Dashboard do recrutador com métricas agregadas calculadas no backend (total de vagas, candidaturas, taxa de aprovação, score médio real, distribuição por status, tendência dos últimos 7 dias, ranking de vagas e melhores candidatos) — tudo em uma única chamada de API
 
 ---
 
@@ -101,10 +112,13 @@ Criadas automaticamente ao subir o backend pela primeira vez (`RUN_SEED=true`):
 
 * Python 3.12
 * FastAPI
-* SQLAlchemy + SQLite
+* SQLAlchemy + SQLite (ou PostgreSQL via `DATABASE_URL`)
 * JWT Authentication (python-jose + passlib)
 * Socket.IO (chat em tempo real)
 * Pydantic Settings
+* scikit-learn (matching por TF-IDF + similaridade de cosseno)
+* slowapi (rate limiting)
+* pytest + httpx (testes automatizados)
 
 ### Frontend
 
@@ -117,7 +131,8 @@ Criadas automaticamente ao subir o backend pela primeira vez (`RUN_SEED=true`):
 
 ### Infraestrutura
 
-* Docker / Docker Compose (local)
+* Docker / Docker Compose (local, com PostgreSQL opcional via profile)
+* GitHub Actions (CI: testes de backend + build de frontend a cada push/PR)
 
 ---
 
@@ -175,6 +190,26 @@ uvicorn app.main:app --reload
 
 Backend disponível em `http://localhost:8000`.
 
+#### Rodando os testes do backend
+
+```bash
+cd backend
+source venv/bin/activate  # ou venv\Scripts\activate no Windows
+pytest -v
+```
+
+#### Usando PostgreSQL em vez de SQLite
+
+Por padrão o projeto usa SQLite (zero configuração). Para usar PostgreSQL:
+
+```bash
+# Via Docker Compose (sobe um Postgres já configurado)
+docker compose --profile postgres up --build
+
+# Ou manualmente: defina no .env
+DATABASE_URL=postgresql+psycopg2://sva_user:sva_password@localhost:5432/sva_db
+```
+
 #### Frontend
 
 ```bash
@@ -205,13 +240,15 @@ Frontend disponível em `http://localhost:3000` (já aponta para `http://localho
 * [x] Seed automático do banco
 * [x] Autenticação JWT
 * [x] Chat em tempo real (Socket.IO)
-* [x] Matching automático por palavras-chave
+* [x] Matching automático por TF-IDF + similaridade de cosseno
+* [x] Testes automatizados (pytest)
+* [x] CI/CD com GitHub Actions
+* [x] PostgreSQL como opção de banco
+* [x] Notificações por e-mail
+* [x] Agendamento de entrevistas
+* [x] Dashboard de analytics consolidado
 * [ ] Integração com LinkedIn
-* [ ] Notificações por e-mail
-* [ ] PostgreSQL como opção de banco
 * [ ] React Native App
-* [ ] Testes automatizados
-* [ ] CI/CD com GitHub Actions
 
 ---
 

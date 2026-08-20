@@ -9,6 +9,7 @@ from app.models.resume import Resume
 from app.schemas.application import ApplicationCreate, ApplicationResponse
 from app.routers.auth import get_current_user
 from app.services.ai_matcher import AIMatcher
+from app.services.notifications import NotificationService
 
 router = APIRouter(prefix="/applications", tags=["applications"])
 
@@ -62,7 +63,13 @@ def apply_to_job(
     db.add(db_application)
     db.commit()
     db.refresh(db_application)
-    
+
+    recruiter = db.query(User).filter(User.id == job.recruiter_id).first()
+    if recruiter:
+        NotificationService.notify_new_application(
+            recruiter.email, current_user.full_name, job.title, compatibility_score
+        )
+
     return db_application
 
 @router.get("/my", response_model=List[ApplicationResponse])
@@ -124,5 +131,9 @@ def update_application_status(
     
     application.status = status
     db.commit()
-    
+
+    candidate = db.query(User).filter(User.id == application.candidate_id).first()
+    if candidate:
+        NotificationService.notify_application_status_change(candidate.email, job.title, status)
+
     return {"message": f"Application status updated to {status}"}

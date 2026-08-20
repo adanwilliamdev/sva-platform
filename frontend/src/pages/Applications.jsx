@@ -3,11 +3,12 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { applicationsAPI } from '../services/applications';
 import { jobsAPI } from '../services/jobs';
 import { chatAPI } from '../services/chat';
+import { interviewsAPI } from '../services/interviews';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import { 
   ArrowLeft, Eye, CheckCircle, XCircle, Clock, Briefcase, 
-  FileText, MessageCircle, X, Users, Calendar
+  FileText, MessageCircle, X, Users, Calendar, CalendarClock
 } from 'lucide-react';
 import api from '../services/api';
 
@@ -22,6 +23,9 @@ const Applications = () => {
   const [selectedResume, setSelectedResume] = useState(null);
   const [resumeContent, setResumeContent] = useState('');
   const [loadingResume, setLoadingResume] = useState(false);
+  const [interviewModalApp, setInterviewModalApp] = useState(null);
+  const [interviewForm, setInterviewForm] = useState({ scheduled_at: '', location: '', notes: '' });
+  const [schedulingInterview, setSchedulingInterview] = useState(false);
 
   // Pegar o jobId da URL
   useEffect(() => {
@@ -138,6 +142,34 @@ const Applications = () => {
     }
   };
 
+  const openInterviewModal = (app) => {
+    setInterviewForm({ scheduled_at: '', location: '', notes: '' });
+    setInterviewModalApp(app);
+  };
+
+  const handleScheduleInterview = async (e) => {
+    e.preventDefault();
+    if (!interviewForm.scheduled_at) {
+      toast.error('Escolha data e horário da entrevista');
+      return;
+    }
+    setSchedulingInterview(true);
+    try {
+      await interviewsAPI.schedule({
+        application_id: interviewModalApp.id,
+        scheduled_at: new Date(interviewForm.scheduled_at).toISOString(),
+        location: interviewForm.location || null,
+        notes: interviewForm.notes || null,
+      });
+      toast.success('📅 Entrevista agendada! O candidato foi notificado.');
+      setInterviewModalApp(null);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao agendar entrevista');
+    } finally {
+      setSchedulingInterview(false);
+    }
+  };
+
   const handleStartChat = async (candidateId) => {
     try {
       const response = await chatAPI.startConversation(jobId);
@@ -213,7 +245,7 @@ const Applications = () => {
             <ArrowLeft className="w-4 h-4" /> Voltar
           </Link>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">
+            <h1 className="font-display text-3xl font-normal text-slate-900">
               {isRecruiter ? `Candidaturas - ${jobTitle}` : jobTitle || 'Minhas Candidaturas'}
             </h1>
             <p className="text-slate-500 text-sm">{applications.length} candidatura(s) encontrada(s)</p>
@@ -222,7 +254,7 @@ const Applications = () => {
         {isRecruiter && jobId && (
           <button
             onClick={handleCloseJob}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600 transition shadow-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition shadow-sm"
           >
             <X className="w-4 h-4" /> Encerrar Vaga
           </button>
@@ -230,7 +262,7 @@ const Applications = () => {
       </div>
 
       {applications.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+        <div className="bg-[#16141B] rounded border border-slate-200 p-12 text-center">
           <Briefcase className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500 text-lg">Nenhuma candidatura encontrada</p>
           <p className="text-slate-400 text-sm">
@@ -259,7 +291,7 @@ const Applications = () => {
               : `Vaga #${app.job_id}`;
             
             return (
-              <div key={app.id} className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition">
+              <div key={app.id} className="bg-[#16141B] rounded border border-slate-200 p-6 hover:shadow-lg transition">
                 <div className="flex flex-col md:flex-row justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3 flex-wrap">
@@ -291,7 +323,7 @@ const Applications = () => {
                     {isRecruiter && (
                       <button
                         onClick={() => handleViewResume(app.resume_id, app.candidate_name)}
-                        className="flex items-center gap-1 px-3 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition"
+                        className="flex items-center gap-1 px-3 py-2 bg-purple-600 text-white rounded-sm text-sm hover:bg-purple-700 transition"
                       >
                         <FileText className="w-4 h-4" /> Currículo
                       </button>
@@ -300,7 +332,7 @@ const Applications = () => {
                     {isRecruiter && (
                       <button
                         onClick={() => handleStartChat(app.candidate_id)}
-                        className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition"
+                        className="flex items-center gap-1 px-3 py-2 bg-green-600 text-white rounded-sm text-sm hover:bg-green-700 transition"
                       >
                         <MessageCircle className="w-4 h-4" /> Chat
                       </button>
@@ -308,16 +340,25 @@ const Applications = () => {
 
                     {isRecruiter && app.status === 'pending' && (
                       <>
-                        <button onClick={() => handleStatusChange(app.id, 'reviewed')} className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Analisar</button>
-                        <button onClick={() => handleStatusChange(app.id, 'rejected')} className="px-3 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600">Recusar</button>
+                        <button onClick={() => handleStatusChange(app.id, 'reviewed')} className="px-3 py-2 bg-blue-600 text-white rounded-sm text-sm hover:bg-blue-700">Analisar</button>
+                        <button onClick={() => handleStatusChange(app.id, 'rejected')} className="px-3 py-2 bg-red-500 text-white rounded-sm text-sm hover:bg-red-600">Recusar</button>
                       </>
                     )}
 
                     {isRecruiter && app.status === 'reviewed' && (
                       <>
-                        <button onClick={() => handleStatusChange(app.id, 'accepted')} className="px-3 py-2 bg-green-500 text-white rounded-lg text-sm hover:bg-green-600">Aprovar</button>
-                        <button onClick={() => handleStatusChange(app.id, 'rejected')} className="px-3 py-2 bg-red-500 text-white rounded-lg text-sm hover:bg-red-600">Recusar</button>
+                        <button onClick={() => handleStatusChange(app.id, 'accepted')} className="px-3 py-2 bg-green-500 text-white rounded-sm text-sm hover:bg-green-600">Aprovar</button>
+                        <button onClick={() => handleStatusChange(app.id, 'rejected')} className="px-3 py-2 bg-red-500 text-white rounded-sm text-sm hover:bg-red-600">Recusar</button>
                       </>
+                    )}
+
+                    {isRecruiter && (app.status === 'reviewed' || app.status === 'accepted') && (
+                      <button
+                        onClick={() => openInterviewModal(app)}
+                        className="flex items-center gap-1 px-3 py-2 bg-teal-600 text-white rounded-sm text-sm hover:bg-teal-700 transition"
+                      >
+                        <CalendarClock className="w-4 h-4" /> Agendar Entrevista
+                      </button>
                     )}
                   </div>
                 </div>
@@ -329,7 +370,7 @@ const Applications = () => {
 
       {showResumeModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl">
+          <div className="bg-[#16141B] rounded max-w-2xl w-full max-h-[80vh] overflow-hidden shadow-2xl">
             <div className="flex justify-between items-center p-4 border-b border-slate-200">
               <h2 className="text-xl font-bold text-slate-900">📄 Currículo - {selectedResume?.candidate_name}</h2>
               <button onClick={() => setShowResumeModal(false)} className="text-slate-400 hover:text-slate-600">
@@ -353,7 +394,7 @@ const Applications = () => {
                   </div>
                   <div className="mb-4">
                     <p className="text-sm text-slate-500">Conteúdo</p>
-                    <div className="mt-2 p-4 bg-slate-50 rounded-lg whitespace-pre-wrap text-sm text-slate-700 max-h-96 overflow-y-auto border border-slate-200">
+                    <div className="mt-2 p-4 bg-slate-50 rounded-sm whitespace-pre-wrap text-sm text-slate-700 max-h-96 overflow-y-auto border border-slate-200">
                       {resumeContent || 'Nenhum conteúdo disponível'}
                     </div>
                   </div>
@@ -361,10 +402,63 @@ const Applications = () => {
               )}
             </div>
             <div className="p-4 border-t border-slate-200 flex justify-end">
-              <button onClick={() => setShowResumeModal(false)} className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition">
+              <button onClick={() => setShowResumeModal(false)} className="px-4 py-2 bg-slate-200 text-slate-700 rounded-sm hover:bg-slate-300 transition">
                 Fechar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {interviewModalApp && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#16141B] rounded max-w-md w-full shadow-2xl">
+            <div className="flex justify-between items-center p-4 border-b border-slate-200">
+              <h2 className="text-lg font-bold text-slate-900">
+                📅 Agendar Entrevista - {interviewModalApp.candidate_name || `Candidato #${interviewModalApp.candidate_id}`}
+              </h2>
+              <button onClick={() => setInterviewModalApp(null)} className="text-slate-400 hover:text-slate-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <form onSubmit={handleScheduleInterview} className="p-4 space-y-4">
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Data e horário *</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={interviewForm.scheduled_at}
+                  onChange={(e) => setInterviewForm({ ...interviewForm, scheduled_at: e.target.value })}
+                  className="w-full border border-slate-300 rounded-sm px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Local ou link da videochamada</label>
+                <input
+                  type="text"
+                  placeholder="https://meet.google.com/... ou endereço"
+                  value={interviewForm.location}
+                  onChange={(e) => setInterviewForm({ ...interviewForm, location: e.target.value })}
+                  className="w-full border border-slate-300 rounded-sm px-3 py-2 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-slate-600 mb-1">Observações</label>
+                <textarea
+                  rows={3}
+                  value={interviewForm.notes}
+                  onChange={(e) => setInterviewForm({ ...interviewForm, notes: e.target.value })}
+                  className="w-full border border-slate-300 rounded-sm px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setInterviewModalApp(null)} className="px-4 py-2 bg-slate-200 text-slate-700 rounded-sm hover:bg-slate-300 transition">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={schedulingInterview} className="px-4 py-2 bg-teal-600 text-white rounded-sm hover:bg-teal-700 transition disabled:opacity-50">
+                  {schedulingInterview ? 'Agendando...' : 'Confirmar Agendamento'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

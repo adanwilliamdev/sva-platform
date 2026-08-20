@@ -19,7 +19,7 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <div className="min-h-screen bg-[#F1F5F9]">
+        <div className="min-h-screen bg-[#0B0A0E]">
           <Navbar />
           <ToastContainer position="top-right" autoClose={4000} />
           <Routes>

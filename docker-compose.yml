@@ -7,6 +7,10 @@ services:
       SECRET_KEY: troque_por_um_segredo_forte_e_unico
       ALLOWED_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
       RUN_SEED: "true"
+      # Por padrão fica em branco -> usa SQLite local (sem depender do
+      # serviço "postgres" abaixo). Para rodar com PostgreSQL, suba com o
+      # profile "postgres" (veja o README) e descomente a linha abaixo:
+      # DATABASE_URL: postgresql+psycopg2://sva_user:sva_password@postgres:5432/sva_db
     ports:
       - "8000:8000"
     volumes:
@@ -24,6 +28,29 @@ services:
     depends_on:
       - backend
 
+  # PostgreSQL é opcional e só sobe quando o profile "postgres" é ativado
+  # explicitamente, para não quebrar quem já usa o setup 100% local com
+  # SQLite (comportamento padrão do "docker compose up"):
+  #   docker compose --profile postgres up --build
+  postgres:
+    image: postgres:16-alpine
+    container_name: sva-postgres
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_DB: sva_db
+      POSTGRES_USER: sva_user
+      POSTGRES_PASSWORD: sva_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sva_user -d sva_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
 volumes:
   backend_db:
   backend_uploads:
+  postgres_data:

@@ -1,23 +1,33 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import socketio
 import os
 import uvicorn
 from dotenv import load_dotenv
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 load_dotenv()
 
 from app.database import engine, Base
-from app.routers import auth, resumes, jobs, applications, chat
+from app.routers import auth, resumes, jobs, applications, chat, interviews, analytics
 from app.socketio import sio
+from app.utils.rate_limit import limiter
+from app.config import settings
 
-# Cria as tabelas do banco (SQLite local) se ainda não existirem
+# Cria as tabelas do banco (SQLite local ou PostgreSQL, conforme DATABASE_URL)
+# se ainda não existirem
 Base.metadata.create_all(bind=engine)
 
-fastapi_app = FastAPI(title="SVA - Sua Vaga Aqui API", version="1.0.0")
+fastapi_app = FastAPI(title="SVA - Sua Vaga Aqui API", version="1.1.0")
+
+# Rate limiting global (protege contra abuso/força bruta em endpoints sensíveis)
+fastapi_app.state.limiter = limiter
+fastapi_app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS - por padrão libera o frontend local (localhost:3000)
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", settings.ALLOWED_ORIGINS).split(",")
 
 fastapi_app.add_middleware(
     CORSMiddleware,
@@ -33,6 +43,8 @@ fastapi_app.include_router(resumes.router)
 fastapi_app.include_router(jobs.router)
 fastapi_app.include_router(applications.router)
 fastapi_app.include_router(chat.router)
+fastapi_app.include_router(interviews.router)
+fastapi_app.include_router(analytics.router)
 
 
 @fastapi_app.get("/")

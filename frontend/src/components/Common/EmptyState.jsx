@@ -10,14 +10,14 @@ const EmptyState = ({
   actionIcon: ActionIcon 
 }) => {
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-12 text-center">
-      {Icon && <Icon className="w-20 h-20 text-gray-400 mx-auto mb-4" />}
-      <h3 className="text-2xl font-semibold text-gray-900 mb-2">{title}</h3>
-      <p className="text-gray-500 mb-6 max-w-md mx-auto">{description}</p>
+    <div className="border border-dashed border-slate-200 rounded p-12 text-center">
+      {Icon && <Icon className="w-16 h-16 text-slate-400 mx-auto mb-4" strokeWidth={1.25} />}
+      <h3 className="font-display text-2xl font-normal text-slate-900 mb-2">{title}</h3>
+      <p className="text-slate-500 mb-6 max-w-md mx-auto">{description}</p>
       {actionText && actionLink && (
         <Link 
           to={actionLink} 
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition transform hover:scale-105"
+          className="inline-flex items-center gap-2 btn-primary"
         >
           {ActionIcon && <ActionIcon className="w-5 h-5" />}
           {actionText}

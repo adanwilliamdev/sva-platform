@@ -95,18 +95,18 @@ const Resume = () => {
       <div className="card">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Meus Currículos</h1>
+            <h1 className="font-display text-3xl font-normal text-slate-900">Meus Currículos</h1>
             <p className="text-slate-500 text-sm">Gerencie seus currículos cadastrados</p>
           </div>
           {!showForm && (
-            <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+            <button onClick={() => setShowForm(true)} className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-sm hover:bg-blue-700 transition">
               <Plus className="w-4 h-4" /> Novo
             </button>
           )}
         </div>
 
         {showForm && (
-          <div className="mb-6 bg-slate-50 rounded-xl p-6 border border-slate-200">
+          <div className="mb-6 bg-slate-50 rounded p-6 border border-slate-200">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-slate-900">Novo Currículo</h2>
               <button onClick={() => setShowForm(false)} className="text-slate-400 hover:text-slate-600">
@@ -116,12 +116,12 @@ const Resume = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Título *</label>
-                <input type="text" name="title" required className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" value={formData.title} onChange={handleChange} placeholder="Ex: Desenvolvedor Full Stack - 2024" />
+                <input type="text" name="title" required className="w-full px-4 py-2 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500" value={formData.title} onChange={handleChange} placeholder="Ex: Desenvolvedor Full Stack - 2024" />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Upload do Currículo (PDF/DOCX)</label>
-                <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-blue-400 transition">
+                <div className="border-2 border-dashed border-slate-300 rounded-sm p-6 text-center hover:border-blue-400 transition">
                   <input type="file" accept=".pdf,.docx" onChange={handleFileChange} className="hidden" id="file-upload" />
                   <label htmlFor="file-upload" className="cursor-pointer flex flex-col items-center">
                     <Upload className="w-10 h-10 text-slate-400 mb-2" />
@@ -138,17 +138,17 @@ const Resume = () => {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Habilidades (separadas por vírgula)</label>
-                <input type="text" name="skills" className="w-full px-4 py-2 border border-slate-200 rounded-lg" value={formData.skills} onChange={handleChange} placeholder="Python, React, SQL, Git" />
+                <input type="text" name="skills" className="w-full px-4 py-2 border border-slate-200 rounded-sm" value={formData.skills} onChange={handleChange} placeholder="Python, React, SQL, Git" />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Experiência (uma por linha)</label>
-                <textarea name="experience" rows="4" className="w-full px-4 py-2 border border-slate-200 rounded-lg" value={formData.experience} onChange={handleChange} />
+                <textarea name="experience" rows="4" className="w-full px-4 py-2 border border-slate-200 rounded-sm" value={formData.experience} onChange={handleChange} />
               </div>
               
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">Formação (uma por linha)</label>
-                <textarea name="education" rows="3" className="w-full px-4 py-2 border border-slate-200 rounded-lg" value={formData.education} onChange={handleChange} />
+                <textarea name="education" rows="3" className="w-full px-4 py-2 border border-slate-200 rounded-sm" value={formData.education} onChange={handleChange} />
               </div>
               
               <button type="submit" disabled={uploading} className="w-full btn-primary justify-center">
@@ -160,7 +160,7 @@ const Resume = () => {
 
         <div className="space-y-4">
           {resumes.map(resume => (
-            <div key={resume.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-lg border border-slate-200 hover:shadow-sm transition">
+            <div key={resume.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-sm border border-slate-200 hover:shadow-sm transition">
               <div>
                 <div className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-blue-600" />
@@ -171,7 +171,7 @@ const Resume = () => {
                 )}
                 <p className="text-xs text-slate-400 mt-1">📅 {new Date(resume.created_at).toLocaleDateString('pt-BR')}</p>
               </div>
-              <button onClick={() => handleDelete(resume.id)} className="text-red-500 hover:text-red-600 transition p-2 hover:bg-red-50 rounded-lg">
+              <button onClick={() => handleDelete(resume.id)} className="text-red-500 hover:text-red-600 transition p-2 hover:bg-red-50 rounded-sm">
                 <Trash2 className="w-5 h-5" />
               </button>
             </div>

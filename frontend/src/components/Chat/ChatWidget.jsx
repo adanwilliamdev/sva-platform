@@ -150,7 +150,7 @@ const ChatWidget = () => {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-teal-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 group hover:scale-110"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-blue-600 to-[#B5533C] text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center z-50 group hover:scale-110"
       >
         <MessageCircle className="w-6 h-6 group-hover:scale-110 transition" />
         {getUnreadCount() > 0 && (
@@ -163,13 +163,13 @@ const ChatWidget = () => {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-2rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 z-50 overflow-hidden">
-      <div className="bg-gradient-to-r from-blue-600 to-teal-600 px-4 py-3 flex justify-between items-center">
+    <div className="fixed bottom-6 right-6 w-[400px] max-w-[calc(100vw-2rem)] bg-[#16141B] rounded shadow-2xl border border-slate-200 z-50 overflow-hidden">
+      <div className="bg-gradient-to-r from-blue-600 to-[#B5533C] px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-white" />
           <span className="text-white font-semibold">Mensagens</span>
           {conversations.length > 0 && (
-            <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full">
+            <span className="bg-[#16141B]/20 text-white text-xs px-2 py-0.5 rounded-full">
               {conversations.reduce((acc, c) => acc + c.unread_count, 0)}
             </span>
           )}
@@ -241,10 +241,10 @@ const ChatWidget = () => {
                           className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[70%] px-4 py-2.5 rounded-2xl ${
+                            className={`max-w-[70%] px-4 py-2.5 rounded ${
                               isMine
-                                ? 'bg-gradient-to-r from-blue-600 to-teal-600 text-white'
-                                : 'bg-white border border-slate-200 text-slate-900'
+                                ? 'bg-gradient-to-r from-blue-600 to-[#B5533C] text-white'
+                                : 'bg-[#16141B] border border-slate-200 text-slate-900'
                             }`}
                           >
                             <p className="text-sm break-words">{msg.message}</p>
@@ -260,19 +260,19 @@ const ChatWidget = () => {
                 )}
               </div>
 
-              <div className="p-3 border-t border-slate-200 flex gap-2 bg-white">
+              <div className="p-3 border-t border-slate-200 flex gap-2 bg-[#16141B]">
                 <textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Digite sua mensagem..."
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
+                  className="flex-1 px-3 py-2 border border-slate-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none text-sm"
                   rows={1}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="p-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
+                  className="p-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-50"
                 >
                   <Send className="w-5 h-5" />
                 </button>

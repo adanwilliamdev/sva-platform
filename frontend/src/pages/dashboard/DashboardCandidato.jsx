@@ -2,13 +2,15 @@
 import { Link } from 'react-router-dom';
 import { applicationsAPI } from '../../services/applications';
 import { resumesAPI } from '../../services/resumes';
+import { interviewsAPI } from '../../services/interviews';
 import { useAuth } from '../../context/AuthContext';
-import { FileText, ClipboardList, TrendingUp, Star, Eye, Calendar } from 'lucide-react';
+import { FileText, ClipboardList, TrendingUp, Star, Calendar, CalendarClock } from 'lucide-react';
 
 const DashboardCandidato = () => {
   const { user } = useAuth();
   const [resumes, setResumes] = useState([]);
   const [applications, setApplications] = useState([]);
+  const [interviews, setInterviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,15 +19,18 @@ const DashboardCandidato = () => {
 
   const fetchData = async () => {
     try {
-      console.log('📡 Buscando dados do candidato...');
-      const [resumesRes, appsRes] = await Promise.all([
+      const [resumesRes, appsRes, interviewsRes] = await Promise.all([
         resumesAPI.getAll(),
-        applicationsAPI.getMy()
+        applicationsAPI.getMy(),
+        interviewsAPI.getMy().catch(() => ({ data: [] })),
       ]);
-      console.log('📥 Currículos:', resumesRes.data);
-      console.log('📥 Candidaturas:', appsRes.data);
       setResumes(resumesRes.data);
       setApplications(appsRes.data);
+      setInterviews(
+        (interviewsRes.data || [])
+          .filter(i => i.status === 'scheduled')
+          .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
+      );
     } catch (error) {
       console.error('❌ Erro:', error);
     } finally {
@@ -79,7 +84,7 @@ const DashboardCandidato = () => {
     <div className="max-w-6xl mx-auto px-4 py-6">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Olá, {user?.full_name?.split(' ')[0] || 'Candidato'}! 👋</h1>
+          <h1 className="font-display text-3xl font-normal text-slate-900">Olá, {user?.full_name?.split(' ')[0] || 'Candidato'}</h1>
           <p className="text-slate-500 text-sm">Acompanhe suas candidaturas</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -90,13 +95,13 @@ const DashboardCandidato = () => {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {stats.map((stat, i) => (
-          <div key={i} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
+          <div key={i} className="bg-[#16141B] rounded p-5 border border-slate-200 shadow-sm hover:shadow-md transition">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-slate-500 font-medium">{stat.title}</p>
                 <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
               </div>
-              <div className={`w-12 h-12 rounded-xl ${stat.color} flex items-center justify-center`}>
+              <div className={`w-12 h-12 rounded ${stat.color} flex items-center justify-center`}>
                 <stat.icon className="w-6 h-6" />
               </div>
             </div>
@@ -109,8 +114,31 @@ const DashboardCandidato = () => {
         ))}
       </div>
 
+      {interviews.length > 0 && (
+        <div className="bg-[#16141B] rounded p-6 border border-slate-200 shadow-sm mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <CalendarClock className="w-5 h-5 text-teal-600" />
+            <h3 className="font-semibold text-slate-900">📅 Próximas Entrevistas</h3>
+          </div>
+          <div className="space-y-3">
+            {interviews.map(interview => (
+              <div key={interview.id} className="flex justify-between items-center p-3 bg-teal-50 rounded">
+                <div>
+                  <p className="font-medium text-slate-900">{interview.job_title || `Vaga #${interview.job_id}`}</p>
+                  <p className="text-xs text-slate-500">
+                    {new Date(interview.scheduled_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}
+                    {interview.location ? ` • ${interview.location}` : ''}
+                  </p>
+                </div>
+                <span className="px-2 py-1 rounded-full text-xs font-medium bg-teal-100 text-teal-700">Agendada</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {applications.length > 0 && (
-        <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+        <div className="bg-[#16141B] rounded p-6 border border-slate-200 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
               <h3 className="font-semibold text-slate-900">📋 Últimas Candidaturas</h3>
@@ -122,7 +150,7 @@ const DashboardCandidato = () => {
           </div>
           <div className="space-y-3">
             {applications.slice(0, 5).map(app => (
-              <div key={app.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition">
+              <div key={app.id} className="flex justify-between items-center p-3 bg-slate-50 rounded hover:bg-slate-100 transition">
                 <div>
                   <p className="font-medium text-slate-900">Vaga #{app.job_id}</p>
                   <p className="text-xs text-slate-500">{new Date(app.applied_at).toLocaleDateString('pt-BR')}</p>
@@ -140,7 +168,7 @@ const DashboardCandidato = () => {
       )}
 
       {applications.length === 0 && (
-        <div className="bg-white rounded-2xl p-12 text-center border border-slate-200">
+        <div className="bg-[#16141B] rounded p-12 text-center border border-slate-200">
           <ClipboardList className="w-16 h-16 text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500 text-lg">Nenhuma candidatura ainda</p>
           <p className="text-slate-400 text-sm">Comece a buscar vagas agora!</p>

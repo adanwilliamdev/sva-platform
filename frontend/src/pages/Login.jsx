@@ -26,14 +26,14 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#F1F5F9]">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8 bg-[#0B0A0E]">
       <div className="max-w-md w-full card p-8">
         <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 gradient-bg rounded-2xl flex items-center justify-center shadow-lg">
-            <Briefcase className="w-8 h-8 text-white" />
+          <div className="w-14 h-14 gradient-bg rounded-full flex items-center justify-center shadow-lg">
+            <Briefcase className="w-8 h-8 text-[#0B0A0E]" />
           </div>
         </div>
-        <h2 className="text-2xl font-bold text-center text-slate-900">Bem-vindo de volta</h2>
+        <h2 className="font-display text-3xl text-center text-slate-900">Bem-vindo de volta</h2>
         <p className="text-center text-slate-500 text-sm mb-6">Faça login para continuar</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -41,14 +41,14 @@ const Login = () => {
             <label className="block text-sm font-medium text-slate-700 mb-2">Usuário</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input name="username" type="text" required className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Digite seu usuário" value={formData.username} onChange={handleChange} />
+              <input name="username" type="text" required className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500" placeholder="Digite seu usuário" value={formData.username} onChange={handleChange} />
             </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Senha</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input name="password" type={showPassword ? 'text' : 'password'} required className="w-full pl-10 pr-12 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500" placeholder="Digite sua senha" value={formData.password} onChange={handleChange} />
+              <input name="password" type={showPassword ? 'text' : 'password'} required className="w-full pl-10 pr-12 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500" placeholder="Digite sua senha" value={formData.password} onChange={handleChange} />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 transform -translate-y-1/2">
                 {showPassword ? <EyeOff className="w-4 h-4 text-slate-400" /> : <Eye className="w-4 h-4 text-slate-400" />}
               </button>

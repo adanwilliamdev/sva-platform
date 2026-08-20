@@ -45,11 +45,11 @@ const PostJob = () => {
     <div className="max-w-4xl mx-auto px-4 py-8">
       <div className="card">
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 gradient-bg rounded-xl flex items-center justify-center">
-            <Briefcase className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 gradient-bg rounded flex items-center justify-center">
+            <Briefcase className="w-6 h-6 text-[#0B0A0E]" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900">Publicar Nova Vaga</h1>
+            <h1 className="font-display text-3xl font-normal text-slate-900">Publicar Nova Vaga</h1>
             <p className="text-slate-500 text-sm">Preencha os dados para criar uma nova oportunidade</p>
           </div>
         </div>
@@ -64,7 +64,7 @@ const PostJob = () => {
                   type="text"
                   name="title"
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   placeholder="Ex: Desenvolvedor Full Stack"
                   value={formData.title}
                   onChange={handleChange}
@@ -80,7 +80,7 @@ const PostJob = () => {
                   type="text"
                   name="company"
                   required
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="Nome da empresa"
                   value={formData.company}
                   onChange={handleChange}
@@ -95,7 +95,7 @@ const PostJob = () => {
                 <input
                   type="text"
                   name="location"
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="São Paulo, SP ou Remoto"
                   value={formData.location}
                   onChange={handleChange}
@@ -110,7 +110,7 @@ const PostJob = () => {
                 <input
                   type="text"
                   name="salary_range"
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="R$ 5.000 - R$ 8.000"
                   value={formData.salary_range}
                   onChange={handleChange}
@@ -126,7 +126,7 @@ const PostJob = () => {
                   name="description"
                   required
                   rows="5"
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="Descreva as responsabilidades, atividades e benefícios..."
                   value={formData.description}
                   onChange={handleChange}
@@ -141,7 +141,7 @@ const PostJob = () => {
                 <textarea
                   name="requirements"
                   rows="4"
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="Experiência com Python&#10;Conhecimento em React&#10;Inglês avançado"
                   value={formData.requirements}
                   onChange={handleChange}
@@ -156,7 +156,7 @@ const PostJob = () => {
                 <input
                   type="text"
                   name="skills_required"
-                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="Python, React, SQL, Docker"
                   value={formData.skills_required}
                   onChange={handleChange}
@@ -169,14 +169,14 @@ const PostJob = () => {
             <button
               type="button"
               onClick={() => navigate('/dashboard')}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 transition"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-slate-300 rounded-sm text-slate-700 font-medium hover:bg-slate-50 transition"
             >
               <X className="w-4 h-4" /> Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 gradient-bg text-white rounded-lg font-semibold hover:shadow-lg transition disabled:opacity-50"
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-3 gradient-bg text-[#0B0A0E] rounded-sm font-semibold hover:shadow-lg transition disabled:opacity-50"
             >
               {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <><Send className="w-4 h-4" /> Publicar Vaga</>}
             </button>
